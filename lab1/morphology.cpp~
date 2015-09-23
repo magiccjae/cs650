@@ -1,0 +1,107 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <stdlib.h>
+#include <math.h>
+
+using namespace std;
+
+
+int** dilate(int **data_array, int height, int width){
+  
+    int **data_copy;
+    int count = 0;
+    data_copy = new int *[height];   
+    for(int i = 0; i < height; i++){
+        data_copy[i] = new int[width];
+        for(int j = 0; j < width; j++){
+            data_copy[i][j] = data_array[i][j];
+        }
+    }
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+
+        }
+    }
+    cout << "count in dilate: " << count << "\n";
+    return data_copy;
+}
+
+void calculate_gradient(int **data_array, int height, int width){
+	
+}
+
+int main(){
+    
+    string operation;
+    ifstream in_file("blocks.pgm");
+    string temp;
+    int width;
+    int height;
+    int max;
+    string data_line;
+
+    getline(in_file,operation);
+    cout << operation << endl;
+    istringstream strm;
+    getline(in_file,temp);
+    strm.str(temp);
+    strm >> width >> height;
+    cout << width << " " << height << endl;
+    
+    getline(in_file,temp);
+    max = atoi(temp.c_str());
+    cout << max << endl;
+    
+    int **data_array;
+    data_array = new int *[height];
+    char data;
+    int initial_count = 0;
+    
+    for(int i = 0; i < height; i++){
+        data_array[i] = new int[width];
+        for(int j = 0; j < width; j++){
+            in_file.get(data);
+	        unsigned char data_u = (unsigned char) data;
+			data_array[i][j] = (int)data_u;
+			initial_count++;
+        }
+    }
+    
+    cout << "initial count: " << initial_count << "\n";
+	
+	cout << data_array[0][0] << endl;
+	
+	calculate_gradient(data_array, height, width);
+
+	cout << data_array[0][0] << endl;
+	
+// checking how many elements
+    int count = 0;
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            count++;
+
+         }
+    }
+    cout << "count in main: " << count << "\n";
+ 
+ 
+// writing to an image file
+    ofstream out_file;
+    out_file.open("result.pgm");
+    operation = "P2";
+    out_file << operation << "\n" << width << " " << height << "\n" << max << "\n";    
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+        	out_file << 128 << " ";
+        }
+    }
+
+
+    return 0;
+
+}
