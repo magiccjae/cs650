@@ -61,22 +61,24 @@ void zero_crossing(int **laplacian_array, int height, int width){
                 count++;
             }
             else{
-                if((data_copy[i-1][j] < 0 && data_copy[i+1][j] > 0) || (data_copy[i-1][j] > 0 && data_copy[i+1][j] < 0)){   // top to bottom
-                    laplacian_array[i][j] = 255;
+                if(data_copy[i][j] <= 0){
+                    if((data_copy[i-1][j] < 0 && data_copy[i+1][j] > 0) || (data_copy[i-1][j] > 0 && data_copy[i+1][j] < 0)){   // top to bottom
+                        laplacian_array[i][j] = 255;
+                    }
+                    else if((data_copy[i][j-1] < 0 && data_copy[i][j+1] > 0) || (data_copy[i][j-1] > 0 && data_copy[i][j+1] < 0)){   // left to right
+                        laplacian_array[i][j] = 255;
+                    }
+                    else if((data_copy[i-1][j-1] < 0 && data_copy[i+1][j+1] > 0) || (data_copy[i-1][j-1] > 0 && data_copy[i+1][j+1] < 0)){   // top-left to bottom-right
+                        laplacian_array[i][j] = 255;
+                    }
+                    else if((data_copy[i-1][j+1] < 0 && data_copy[i+1][j-1] > 0) || (data_copy[i-1][j+1] > 0 && data_copy[i+1][j-1] < 0)){   // top-right to bottom-left
+                        laplacian_array[i][j] = 255;
+                    }
+                    else{
+                        laplacian_array[i][j] = 0;
+                    }
+                    count++;
                 }
-                else if((data_copy[i][j-1] < 0 && data_copy[i][j+1] > 0) || (data_copy[i][j-1] > 0 && data_copy[i][j+1] < 0)){   // left to right
-                    laplacian_array[i][j] = 255;
-                }
-                else if((data_copy[i-1][j-1] < 0 && data_copy[i+1][j+1] > 0) || (data_copy[i-1][j-1] > 0 && data_copy[i+1][j+1] < 0)){   // top-left to bottom-right
-                    laplacian_array[i][j] = 255;
-                }
-                else if((data_copy[i-1][j+1] < 0 && data_copy[i+1][j-1] > 0) || (data_copy[i-1][j+1] > 0 && data_copy[i+1][j-1] < 0)){   // top-right to bottom-left
-                    laplacian_array[i][j] = 255;
-                }
-                else{
-                    laplacian_array[i][j] = 0;
-                }
-                count++;
             }
         }
     }
@@ -108,7 +110,7 @@ void laplacian(int **data_array, int **laplacian_array, int height, int width){
     
 }
 
-void write_file(int **output_array, string operation, int width, int height, int max){
+void write_file(int **output_array, string operation, int height, int width, int max){
     ofstream out_file;
     out_file.open("result.pgm");
     operation = "P2";
@@ -187,7 +189,7 @@ int main(){
     cout << "count in main: " << count << "\n";
  
  // writing to an image file
- 	write_file(laplacian_array, operation, width, height, max);
+ 	write_file(laplacian_array, operation, height, width, max);
 
     return 0;
 
