@@ -8,7 +8,6 @@
 using namespace std;
 
 
-
 void calculate_gradient(int **data_array, double **gradient_magnitude, double **gradient_orientation, int height, int width){
 
     int **data_copy;
@@ -44,6 +43,46 @@ void calculate_gradient(int **data_array, double **gradient_magnitude, double **
     cout << "count in calculate_gradient: " << count << "\n";
 }
 
+void zero_crossing(int **laplacian_array, int height, int width){
+    
+    int **data_copy;
+    data_copy = new int *[height];   
+    for(int i = 0; i < height; i++){
+        data_copy[i] = new int[width];
+        for(int j = 0; j < width; j++){
+            data_copy[i][j] = laplacian_array[i][j];
+        }
+    }
+
+    int count = 0;
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(i == 0 || j == 0 || i == height-1 || j == width-1){
+                count++;
+            }
+            else{
+                if((data_copy[i-1][j] < 0 && data_copy[i+1][j] > 0) || (data_copy[i-1][j] > 0 && data_copy[i+1][j] < 0)){   // top to bottom
+                    laplacian_array[i][j] = 255;
+                }
+                else if((data_copy[i][j-1] < 0 && data_copy[i][j+1] > 0) || (data_copy[i][j-1] > 0 && data_copy[i][j+1] < 0)){   // left to right
+                    laplacian_array[i][j] = 255;
+                }
+                else if((data_copy[i-1][j-1] < 0 && data_copy[i+1][j+1] > 0) || (data_copy[i-1][j-1] > 0 && data_copy[i+1][j+1] < 0)){   // top-left to bottom-right
+                    laplacian_array[i][j] = 255;
+                }
+                else if((data_copy[i-1][j+1] < 0 && data_copy[i+1][j-1] > 0) || (data_copy[i-1][j+1] > 0 && data_copy[i+1][j-1] < 0)){   // top-right to bottom-left
+                    laplacian_array[i][j] = 255;
+                }
+                else{
+                    laplacian_array[i][j] = 0;
+                }
+                count++;
+            }
+        }
+    }
+
+    cout << "count in zero_crossing: " << count << "\n";
+}
 
 void laplacian(int **data_array, int **laplacian_array, int height, int width){
     int count = 0;
@@ -58,13 +97,31 @@ void laplacian(int **data_array, int **laplacian_array, int height, int width){
 
                laplacian_array[i][j] = data_array[i-1][j-1]*kernel[0][0]+data_array[i-1][j]*kernel[0][1]+data_array[i-1][j+1]*kernel[0][2]+data_array[i][j-1]*kernel[1][0]+data_array[i][j]*kernel[1][1]+data_array[i][j+1]*kernel[1][2]+data_array[i+1][j-1]*kernel[2][0]+data_array[i+1][j]*kernel[2][1]+data_array[i+1][j+1]*kernel[2][2];
                 
-	        count++;
+	            count++;
             }
         }
     }
-    cout << "count in laplacian: " << count << "\n";
 
+    cout << "count in laplacian: " << count << "\n";
+    // to find zero crossing
+    zero_crossing(laplacian_array, height, width);
     
+}
+
+void write_file(int **output_array, string operation, int width, int height, int max){
+    ofstream out_file;
+    out_file.open("result.pgm");
+    operation = "P2";
+    out_file << operation << "\n" << width << " " << height << "\n" << max << "\n";    
+    
+    int threshold = 70;
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            out_file << output_array[i][j] << " ";
+        }
+        out_file << "\n";
+    }
 }
 
 int main(){
@@ -129,30 +186,8 @@ int main(){
     }
     cout << "count in main: " << count << "\n";
  
- 
-// writing to an image file
-    ofstream out_file;
-    out_file.open("result.pgm");
-    operation = "P2";
-    out_file << operation << "\n" << width << " " << height << "\n" << max << "\n";    
-    
-    int threshold = 70;
-
-    for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
-            if(laplacian_array[i][j] > 255){
-                out_file << 255 << " ";
-            }
-            else if(laplacian_array[i][j] < 0){
-                out_file << 0 << " ";
-            }
-            else{
-                out_file << laplacian_array[i][j] << " ";
-            }
-        }
-        out_file << "\n";
-    }
-
+ // writing to an image file
+ 	write_file(laplacian_array, operation, width, height, max);
 
     return 0;
 
