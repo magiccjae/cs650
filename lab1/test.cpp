@@ -1,0 +1,53 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <stdlib.h>
+#include <math.h>
+
+using namespace std;
+
+int main(){
+		
+    ofstream out_file;
+    out_file.open("test.pgm");
+    string operation = "P2";
+    int width = 256;
+    int height = 256;
+    int max = 255;
+    
+    
+    int **data_array;
+    data_array = new int *[height];
+    for(int i = 0; i < height; i++){
+       data_array[i] = new int[width];   
+       for(int j = 0; j < width; j++){
+			data_array[i][j] = 0;
+       }
+    }
+    
+    for(int i = 0; i < height; i++){
+       for(int j = 0; j < width; j++){
+       		if(i == 127 && j == 127){
+                for(int k = 0; k < 360; k++){   // creating 360 points of a circle
+            		int a = (int)round(i + 32*cos(2*k*M_PI/360.0));
+            		int b = (int)round(j + 32*sin(2*k*M_PI/360.0));
+
+            		data_array[a][b] = 255;
+            	}
+       		}
+       }
+    }    
+    
+
+    out_file << operation << "\n" << width << " " << height << "\n" << max << "\n";    
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            out_file << data_array[i][j] << " ";			
+        }
+        out_file << "\n";
+    }
+
+	return 0;
+}

@@ -142,6 +142,185 @@ void joint(int **laplacian_array, int **threshold_array, int height, int width){
    
 }
 
+void create_hough_array(int **hough_array, int height, int width, int padding){
+    
+    int count = 0;
+    hough_array = new int *[height+2*padding];
+    for(int i = 0; i < height+2*padding; i++){
+        hough_array[i] = new int[width+2*padding];
+        for(int j = 0; j < width+2*padding; j++){
+            count++;
+        }
+    }
+
+    cout << "count in create_hough_array: " << count << "\n";
+
+}
+
+
+void vote(int **threshold_array, int **hough_array, int height, int width, int padding){
+
+    int points = 360;
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(threshold_array[i][j] == 255){
+                int newi = i+padding;
+                int newj = j+padding;
+                for(int k = 0; k < points; k++){   // creating 360 points of a circle
+                    int a = (int)round(newi + padding*cos(k*2*M_PI/360.0));
+                    int b = (int)round(newj + padding*sin(k*2*M_PI/360.0));
+
+                    hough_array[a][b]++;
+                }                
+
+            }
+        }
+    }
+
+}
+
+void pick_center(int **hough_array, int height, int width, int padding, int threshold){
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(hough_array[i+padding][j+padding] > threshold){
+                hough_array[i+padding][j+padding] = 255;
+            }
+            else{
+                hough_array[i+padding][j+padding] = 0;
+            }
+        }
+    }
+}
+
+
+void draw_circle(int **hough_array, int height, int width, int padding){
+    
+    int **data_copy;
+    data_copy = new int *[height+2*padding];   
+    for(int i = 0; i < height+2*padding; i++){
+        data_copy[i] = new int[width+2*padding];
+        for(int j = 0; j < width+2*padding; j++){
+            data_copy[i][j] = hough_array[i][j];
+            hough_array[i][j] = 0;
+        }
+    }
+    
+    int points = 360;
+
+    for(int i = 0; i < height+2*padding; i++){
+        for(int j = 0; j < width+2*padding; j++){
+            if(data_copy[i][j] == 255){
+
+                for(int k = 0; k < points; k++){   // creating 360 points of a circle
+                    int a = (int)round(i + padding*cos(k*2*M_PI/360.0));
+                    int b = (int)round(j + padding*sin(k*2*M_PI/360.0));
+
+                    hough_array[a][b] = 255;
+                }                
+            }
+        }
+    }
+}
+
+void combine_hough(int **threshold_array, int **hough_32, int **hough_64, int **hough_96, int height, int width, int padding1, int padding2, int padding3){
+ 
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(hough_32[i+padding1][j+padding1] == 255 || hough_64[i+padding2][j+padding1] == 255 || hough_96[i+padding3][j+padding3] == 255){
+                threshold_array[i][j] = 255;
+            }
+            else{
+                threshold_array[i][j] = 0;
+            }
+        }
+    }
+
+}
+
+void write_hough(string filename, int **output_array, int height, int width, int padding, int max){
+    ofstream out_file;
+    out_file.open("hough.pgm");
+    string operation = "P2";
+    out_file << operation << "\n" << width << " " << height << "\n" << max << "\n";   
+    int threshold = 1;
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            out_file << output_array[i+padding][j+padding] << " ";
+        }
+        out_file << "\n";
+    }
+}
+
+void hough_transform(int **threshold_array, int height, int width, int max){
+    
+    
+    int **hough_32;
+    int **hough_64;
+    int **hough_96;
+    
+    int padding1 = 16;
+    int padding2 = 32;
+    int padding3 = 48;
+    
+    int count = 0;
+    hough_32 = new int *[height+2*padding1];
+    for(int i = 0; i < height+2*padding1; i++){
+        hough_32[i] = new int[width+2*padding1];
+        for(int j = 0; j < width+2*padding1; j++){
+            count++;
+        }
+    }
+    cout << "count in hough_32: " << count << "\n";
+    
+    count = 0;
+    hough_64 = new int *[height+2*padding2];
+    for(int i = 0; i < height+2*padding2; i++){
+        hough_64[i] = new int[width+2*padding2];
+        for(int j = 0; j < width+2*padding2; j++){
+            count++;
+        }
+    }
+    cout << "count in hough_64: " << count << "\n";   
+    
+    count = 0;
+    hough_96 = new int *[height+2*padding3];
+    for(int i = 0; i < height+2*padding3; i++){
+        hough_96[i] = new int[width+2*padding3];
+        for(int j = 0; j < width+2*padding3; j++){
+            count++;
+        }
+    }
+    cout << "count in hough_96: " << count << "\n";
+
+
+//    create_hough_array(hough_32, height, width, padding1);
+    
+//    for(int i = 0; i < height+2*padding1; i++){
+//        for(int j = 0; j < width+2*padding1; j++){
+//           cout << "i: " << i << " " << "j: " << j << " " << "stuff: " << hough_32[i][j] << endl;			
+//        }
+//    }
+
+
+    int threshold_32 = 147;
+    int threshold_64 = 145;
+    int threshold_96 = 130;
+    vote(threshold_array, hough_32, height, width, padding1);
+    vote(threshold_array, hough_64, height, width, padding2);
+    vote(threshold_array, hough_96, height, width, padding3);
+    pick_center(hough_32,height,width,padding1,threshold_32);
+    pick_center(hough_64,height,width,padding2,threshold_64);
+    pick_center(hough_96,height,width,padding3,threshold_96);
+    draw_circle(hough_32,height,width,padding1);
+    draw_circle(hough_64,height,width,padding2);
+    draw_circle(hough_96,height,width,padding3);
+    combine_hough(threshold_array, hough_32, hough_64, hough_96, height, width, padding1, padding2, padding3);
+    write_hough("hough_32", hough_32, height, width, padding1, max);
+    
+}
+
 void write_file(int **output_array, string operation, int height, int width, int max){
     ofstream out_file;
     out_file.open("result.pgm");
@@ -167,7 +346,7 @@ void write_file(int **output_array, string operation, int height, int width, int
 int main(){
     
     string operation;
-    ifstream in_file("simplecircle.ppm");
+    ifstream in_file("circles.ppm");
     string temp;
     int width;
     int height;
@@ -210,10 +389,10 @@ int main(){
         threshold_array[i] = new int[width];
 //  gray version
 //        for(int j = 0; j < width; j++){
-//          in_file.get(data);
-//	    unsigned char data_u = (unsigned char) data;
-//	    data_array[i][j] = (int)data_u;
-//	    initial_count++;
+//            in_file.get(data);
+//	        unsigned char data_u = (unsigned char) data;
+//	        data_array[i][j] = (int)data_u;
+//	        initial_count++;
 
 //   color version
         for(int j = 0; j < width; j++){
@@ -243,11 +422,29 @@ int main(){
     cout << "initial count: " << initial_count << "\n";
 	
     calculate_gradient(data_array, gradient_magnitude, gradient_orientation, height, width);
-    laplacian(data_array, laplacian_array, height, width);      // laplacian_array binarized after this point
-    threshold_gradient(gradient_magnitude, threshold_array, height, width);     // threshold_Array binarized after this point
-    joint(laplacian_array, threshold_array, height, width);
     
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(gradient_orientation[i][j] >=0 && gradient_orientation[i][j] < M_PI/2){
+                threshold_array[i][j] = 255;
+            }
+            else if(gradient_orientation[i][j] >= M_PI/2 && gradient_orientation[i][j] < M_PI){
+                threshold_array[i][j] = 170;
+            }
+            else if(gradient_orientation[i][j] <= -M_PI/2 && gradient_orientation[i][j] > -M_PI){
+                threshold_array[i][j] = 85;
+            }
+            else{
+                threshold_array[i][j] = 0;
+            }
+        }
+    }
+
+//    laplacian(data_array, laplacian_array, height, width);      // laplacian_array binarized after this point
+//    threshold_gradient(gradient_magnitude, threshold_array, height, width);     // threshold_Array binarized after this point
+//    joint(laplacian_array, threshold_array, height, width);
     
+//    hough_transform(threshold_array, height, width, max);
 
 // checking how many elements
     int count = 0;
@@ -259,7 +456,7 @@ int main(){
     }
     cout << "count in main: " << count << "\n";
  
- // writing to an image file
+//  writing to an image file
     write_file(threshold_array, operation, height, width, max);
 
     return 0;
