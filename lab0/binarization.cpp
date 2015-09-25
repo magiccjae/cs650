@@ -24,7 +24,7 @@ int main(){
     string operation;
     string comment;
     string comment2;
-    ifstream in_file("lab0_test_images/Declaration_Pg1of1_AC_crop.pgm");
+    ifstream in_file("lab0_test_images/gray_circles.pgm");
 
     string temp;
     int width;
@@ -33,8 +33,8 @@ int main(){
 
     getline(in_file,operation);
     cout << operation << endl;
-    getline(in_file,comment);
-    cout << comment << endl;
+//    getline(in_file,comment);
+//    cout << comment << endl;
     
     istringstream strm;
     getline(in_file,temp);
@@ -50,12 +50,19 @@ int main(){
     cout << "hi" << endl;
     int data_array[height][width];
     char data;
+    
+    istringstream strm1;
 
     for(int i = 0; i < height; i++){
+        getline(in_file,temp);
+        strm1.str(temp);
         for(int j = 0; j < width; j++){
-            in_file.get(data);
-            unsigned char data_u = (unsigned char) data;
-            data_array[i][j] = (int)data_u;
+            int element = 0;
+            strm1 >> element;
+            data_array[i][j] = element;
+//            in_file.get(data);
+//            unsigned char data_u = (unsigned char) data;
+//            data_array[i][j] = (int)data_u;
         }
     }
 
