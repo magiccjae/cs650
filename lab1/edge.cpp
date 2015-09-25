@@ -43,6 +43,34 @@ void calculate_gradient(int **data_array, double **gradient_magnitude, double **
     cout << "count in calculate_gradient: " << count << "\n";
 }
 
+void smoothe(int **data_array, int height, int width){
+
+    double **data_copy;
+    int count = 0;
+
+    data_copy = new double *[height];   
+    for(int i = 0; i < height; i++){
+        data_copy[i] = new double[width];
+        for(int j = 0; j < width; j++){
+            data_copy[i][j] = data_array[i][j];
+        }
+    }
+    
+    double kernel[3][3] = {{0.1111,0.1111,0.1111},{0.1111,0.1111,0.1111},{0.1111,0.1111,0.1111}};
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(i == 0 || j == 0 || i == height-1 || j == width-1){
+                count++;
+            }
+            else{
+                
+               data_array[i][j] = (int)(data_copy[i-1][j-1]*kernel[0][0]+data_copy[i-1][j]*kernel[0][1]+data_copy[i-1][j+1]*kernel[0][2]+data_copy[i][j-1]*kernel[1][0]+data_copy[i][j]*kernel[1][1]+data_copy[i][j+1]*kernel[1][2]+data_copy[i+1][j-1]*kernel[2][0]+data_copy[i+1][j]*kernel[2][1]+data_copy[i+1][j+1]*kernel[2][2]);
+                count++;
+            }
+        }
+    }
+    cout << "count in smoothe: " << count << "\n";
+}
 void zero_crossing(int **laplacian_array, int height, int width){
     
     int **data_copy;
@@ -61,7 +89,7 @@ void zero_crossing(int **laplacian_array, int height, int width){
                 count++;
             }
             else{
-                if(data_copy[i][j] <= 0){
+               if(data_copy[i][j] <= 0){
                     if((data_copy[i-1][j] < 0 && data_copy[i+1][j] > 0) || (data_copy[i-1][j] > 0 && data_copy[i+1][j] < 0)){   // top to bottom
                         laplacian_array[i][j] = 255;
                     }
@@ -112,7 +140,7 @@ void laplacian(int **data_array, int **laplacian_array, int height, int width){
 }
 
 void threshold_gradient(double **gradient_magnitude, int **threshold_array, int height, int width){
-    int threshold = 70;
+    int threshold = 60;
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             if(gradient_magnitude[i][j] > threshold){
@@ -304,9 +332,9 @@ void hough_transform(int **threshold_array, int height, int width, int max){
 //    }
 
 
-    int threshold_32 = 147;
-    int threshold_64 = 145;
-    int threshold_96 = 130;
+    int threshold_32 = 125;     // so far 125 is the best
+    int threshold_64 = 105;     // so far 105 is the best
+    int threshold_96 = 100;     // so far 100 is the best
     vote(threshold_array, hough_32, height, width, padding1);
     vote(threshold_array, hough_64, height, width, padding2);
     vote(threshold_array, hough_96, height, width, padding3);
@@ -421,6 +449,9 @@ int main(){
 
     cout << "initial count: " << initial_count << "\n";
 	
+    // smoothe the image
+   smoothe(data_array, height, width);
+
     calculate_gradient(data_array, gradient_magnitude, gradient_orientation, height, width);
     
     for(int i = 0; i < height; i++){
@@ -440,11 +471,11 @@ int main(){
         }
     }
 
-//    laplacian(data_array, laplacian_array, height, width);      // laplacian_array binarized after this point
-//    threshold_gradient(gradient_magnitude, threshold_array, height, width);     // threshold_Array binarized after this point
-//    joint(laplacian_array, threshold_array, height, width);
+    laplacian(data_array, laplacian_array, height, width);      // laplacian_array binarized after this point
+    threshold_gradient(gradient_magnitude, threshold_array, height, width);     // threshold_Array binarized after this point
+    joint(laplacian_array, threshold_array, height, width);
     
-//    hough_transform(threshold_array, height, width, max);
+    hough_transform(threshold_array, height, width, max);
 
 // checking how many elements
     int count = 0;
@@ -457,7 +488,7 @@ int main(){
     cout << "count in main: " << count << "\n";
  
 //  writing to an image file
-    write_file(threshold_array, operation, height, width, max);
+    write_file(threshold_array, operation,height, width, max);
 
     return 0;
 
