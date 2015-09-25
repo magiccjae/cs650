@@ -140,7 +140,7 @@ void laplacian(int **data_array, int **laplacian_array, int height, int width){
 }
 
 void threshold_gradient(double **gradient_magnitude, int **threshold_array, int height, int width){
-    int threshold = 60;
+    int threshold = 50;
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             if(gradient_magnitude[i][j] > threshold){
@@ -209,14 +209,35 @@ void vote(int **threshold_array, int **hough_array, int height, int width, int p
 }
 
 void pick_center(int **hough_array, int height, int width, int padding, int threshold){
-
-    for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
-            if(hough_array[i+padding][j+padding] > threshold){
-                hough_array[i+padding][j+padding] = 255;
+    int surrounding = 4;
+    for(int i = 0; i < height+2*padding; i++){
+        for(int j = 0; j < width+2*padding; j++){
+            if(hough_array[i][j] > threshold){
+                int iammax = 0;
+                for(int a = 0; a < surrounding; a++){
+                    for(int b = 0; b < surrounding; b++){
+                        if(hough_array[i][j] > hough_array[i+a][j+b]){
+                            hough_array[i+a][j+b] = 0;
+                            iammax++;
+                        }
+                    }
+                }
+                if(iammax == (surrounding*surrounding-1)){
+                    hough_array[i][j] = 255;
+                }
+                else{
+                    hough_array[i][j] = 0;
+                }
+//                if((hough_array[i][j] < hough_array[i-1][j-1]) || (hough_array[i][j] < hough_array[i-1][j]) || (hough_array[i][j] < hough_array[i-1][j+1]) || (hough_array[i][j] < hough_array[i][j-1]) || (hough_array[i][j] < hough_array[i][j+1]) || (hough_array[i][j] < hough_array[i+1][j-1]) || (hough_array[i][j] < hough_array[i+1][j]) || (hough_array[i][j] < hough_array[i+1][j+1])
+//){
+//                    hough_array[i][j] = 0;
+//                }
+//                else{
+//                    hough_array[i][j] = 255;
+//                }
             }
             else{
-                hough_array[i+padding][j+padding] = 0;
+                hough_array[i][j] = 0;
             }
         }
     }
@@ -236,6 +257,7 @@ void draw_circle(int **hough_array, int height, int width, int padding){
     }
     
     int points = 360;
+    
 
     for(int i = 0; i < height+2*padding; i++){
         for(int j = 0; j < width+2*padding; j++){
@@ -244,8 +266,9 @@ void draw_circle(int **hough_array, int height, int width, int padding){
                 for(int k = 0; k < points; k++){   // creating 360 points of a circle
                     int a = (int)round(i + padding*cos(k*2*M_PI/360.0));
                     int b = (int)round(j + padding*sin(k*2*M_PI/360.0));
-
-                    hough_array[a][b] = 255;
+                    if(a >= 0 && b >= 0){
+                        hough_array[a][b] = 255;
+                    }
                 }                
             }
         }
@@ -264,6 +287,22 @@ void combine_hough(int **threshold_array, int **hough_32, int **hough_64, int **
             }
         }
     }
+    
+    for(int i = 0; i < height+2*padding1; i++){
+        for(int j = 0; j < width+2*padding1; j++){
+            if(hough_32[i][j] == 255){
+                hough_96[i+2*padding2][j+2*padding2] = 255;
+            }
+        }
+    }
+
+    for(int i = 0; i < height+2*padding2; i++){
+        for(int j = 0; j < width+2*padding2; j++){
+            if(hough_64[i][j] == 255){
+                hough_96[i+2*padding1][j+2*padding1] = 255;
+            }
+        }
+    }
 
 }
 
@@ -271,11 +310,13 @@ void write_hough(string filename, int **output_array, int height, int width, int
     ofstream out_file;
     out_file.open("hough.pgm");
     string operation = "P2";
-    out_file << operation << "\n" << width << " " << height << "\n" << max << "\n";   
+    int new_width = width+2*padding;
+    int new_height = height+2*padding;
+    out_file << operation << "\n" << new_width << " " << new_height << "\n" << max << "\n";   
     int threshold = 1;
-    for(int i = 0; i < height; i++){
-        for(int j = 0; j < width; j++){
-            out_file << output_array[i+padding][j+padding] << " ";
+    for(int i = 0; i < new_height; i++){
+        for(int j = 0; j < new_width; j++){
+            out_file << output_array[i][j] << " ";
         }
         out_file << "\n";
     }
@@ -345,7 +386,7 @@ void hough_transform(int **threshold_array, int height, int width, int max){
     draw_circle(hough_64,height,width,padding2);
     draw_circle(hough_96,height,width,padding3);
     combine_hough(threshold_array, hough_32, hough_64, hough_96, height, width, padding1, padding2, padding3);
-    write_hough("hough_32", hough_32, height, width, padding1, max);
+    write_hough("hough_96", hough_96, height, width, padding3, max);
     
 }
 
@@ -450,8 +491,8 @@ int main(){
     cout << "initial count: " << initial_count << "\n";
 	
     // smoothe the image
-   smoothe(data_array, height, width);
-
+    smoothe(data_array, height, width);
+    smoothe(data_array,height,width);
     calculate_gradient(data_array, gradient_magnitude, gradient_orientation, height, width);
     
     for(int i = 0; i < height; i++){
