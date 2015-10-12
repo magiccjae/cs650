@@ -382,9 +382,9 @@ void hough_transform(int **threshold_array, int height, int width, int max){
     pick_center(hough_32,height,width,padding1,threshold_32);
     pick_center(hough_64,height,width,padding2,threshold_64);
     pick_center(hough_96,height,width,padding3,threshold_96);
-    draw_circle(hough_32,height,width,padding1);
-    draw_circle(hough_64,height,width,padding2);
-    draw_circle(hough_96,height,width,padding3);
+//    draw_circle(hough_32,height,width,padding1);
+//    draw_circle(hough_64,height,width,padding2);
+//    draw_circle(hough_96,height,width,padding3);
     combine_hough(threshold_array, hough_32, hough_64, hough_96, height, width, padding1, padding2, padding3);
     write_hough("hough_96", hough_96, height, width, padding3, max);
     
