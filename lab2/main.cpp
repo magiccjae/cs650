@@ -59,7 +59,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 int main()
 {
     // Read image from file
-    img = imread("simplecircle.ppm");
+    img = imread("apples.jpg");
 
     //if fail to read the image
     if ( img.empty() )
@@ -157,6 +157,21 @@ int main()
             }
         }
     }
+    
+    Mat likelihood(height,width,img.type());
+    cout << likelihood.type() << " " << likelihood.channels() << endl;
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            //cout << i << " " << j << endl;
+            likelihood.at<Vec3b>(i,j).val[0] = pixel_array[i][j].foreground*255;
+            likelihood.at<Vec3b>(i,j).val[1] = pixel_array[i][j].foreground*255;
+            likelihood.at<Vec3b>(i,j).val[2] = pixel_array[i][j].foreground*255;
+        }
+    }
+
+    namedWindow("likelihood", CV_WINDOW_AUTOSIZE);
+    imshow("likelihood", likelihood);
+    waitKey(0);
 
     // prior energy
     int neighbors = 8;
@@ -205,14 +220,14 @@ int main()
 
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
-            int index = i*height+j;
+            int index = i*width+j;
             g -> add_tweights(index, pixel_array[i][j].foreground, pixel_array[i][j].background);
         }
     }
     
     for(int i = 1; i < height-1; i++){
         for(int j = 1; j < width-1; j++){
-            int index = i*height+j;
+            int index = i*width+j;
             for(int k = 0; k < neighbors; k++){
                 if(k == 0){
                     g -> add_edge(index, index-width-1, pixel_array[i][j].prior_energy[0], pixel_array[i][j].prior_energy[0]);
@@ -246,10 +261,10 @@ int main()
 
     printf("Flow = %d\n", flow);
     printf("Minimum cut:\n");
-    if (g->what_segment(0) == GraphType::SOURCE)
-        printf("node0 is in the SOURCE set\n");
-    else
-        printf("node0 is in the SINK set\n");
+//    if (g->what_segment(0) == GraphType::SOURCE)
+//        printf("node0 is in the SOURCE set\n");
+//    else
+//        printf("node0 is in the SINK set\n");
     
     Mat result(height, width, img.type());
     for(int i = 0; i < height; i++){
@@ -257,21 +272,18 @@ int main()
             int index = i*height+j;
             if(g->what_segment(index) == GraphType::SOURCE){
                 result.at<Vec3b>(i,j).val[0] = 255;
-                result.at<Vec3b>(i,j).val[1] = 0;
-                result.at<Vec3b>(i,j).val[2] = 0;
+                result.at<Vec3b>(i,j).val[1] = 255;
+                result.at<Vec3b>(i,j).val[2] = 255;
             }
             else{
                 result.at<Vec3b>(i,j).val[0] = 0;
-                result.at<Vec3b>(i,j).val[1] = 255;
+                result.at<Vec3b>(i,j).val[1] = 0;
                 result.at<Vec3b>(i,j).val[2] = 0;
             }
         }
     }
 
-    //Create a window
     namedWindow("result", 1);
-
-    //show the image
     imshow("result", result);
     
     waitKey(0);

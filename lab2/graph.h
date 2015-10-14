@@ -66,6 +66,7 @@
 #include <assert.h>
 // NOTE: in UNIX you need to use -DNDEBUG preprocessor option to supress assert's!!!
 
+#include <iostream>
 
 
 // captype: type of edge capacities (excluding t-links)
@@ -408,6 +409,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	inline void Graph<captype,tcaptype,flowtype>::add_edge(node_id _i, node_id _j, captype cap, captype rev_cap)
 {
 	assert(_i >= 0 && _i < node_num);
+ //       std::cout << _j << " " << node_num << std::endl;
 	assert(_j >= 0 && _j < node_num);
 	assert(_i != _j);
 	assert(cap >= 0);
