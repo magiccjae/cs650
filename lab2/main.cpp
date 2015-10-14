@@ -9,14 +9,14 @@ using namespace std;
 using namespace cv;
 
 class Pixel{
-	public:
-		int r;
-		int g;
-		int b;
-		double foreground;
-		double background;
-		double prior_energy[8];
-                int whatisit;       // 2 is foreground, 4 is background
+public:
+    int r;
+    int g;
+    int b;
+    double foreground;
+    double background;
+    double prior_energy[8];
+    int whatisit;       // 2 is foreground, 4 is background
 
 };
 
@@ -28,47 +28,47 @@ int big = 100;
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
 
-     if  ( event == EVENT_LBUTTONDOWN )		// foreground select
-     {
+    if  ( event == EVENT_LBUTTONDOWN )		// foreground select
+    {
         cout << "foreground selected at " << y << " " << x << endl;
         cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
         pixel_array[y][x].foreground = small;
         pixel_array[y][x].background = big;
         pixel_array[y][x].whatisit = 2;
         
-     }
-     else if  ( event == EVENT_RBUTTONDOWN )
-     {
+    }
+    else if  ( event == EVENT_RBUTTONDOWN )
+    {
         cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-     }
-     else if  ( event == EVENT_MBUTTONDOWN )        // background select
-     {
+    }
+    else if  ( event == EVENT_MBUTTONDOWN )        // background select
+    {
         cout << "background selected at " << y << " " << x << endl;
         cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
         pixel_array[y][x].foreground = big;
         pixel_array[y][x].background = small;
         pixel_array[y][x].whatisit = 4;
         
-     }
-     else if ( event == EVENT_MOUSEMOVE )
-     {
+    }
+    else if ( event == EVENT_MOUSEMOVE )
+    {
         // cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
-     }
+    }
 }
 
 int main()
 {
-     // Read image from file 
-     img = imread("simplecircle.ppm");
+    // Read image from file
+    img = imread("simplecircle.ppm");
 
-     //if fail to read the image
-     if ( img.empty() ) 
-     { 
-          cout << "Error loading the image" << endl;
-          return -1; 
-     }
+    //if fail to read the image
+    if ( img.empty() )
+    {
+        cout << "Error loading the image" << endl;
+        return -1;
+    }
     
-
+    cout << img.type() << " " << img.channels() << endl;
 
     int height = img.rows;
     int width = img.cols;
@@ -91,17 +91,17 @@ int main()
         }
     }
 
-      //Create a window
-     namedWindow("My Window", 1);
+    //Create a window
+    namedWindow("My Window", 1);
 
-      //set the callback function for any mouse event
-     setMouseCallback("My Window", CallBackFunc, NULL);
+    //set the callback function for any mouse event
+    setMouseCallback("My Window", CallBackFunc, NULL);
 
-      //show the image
-     imshow("My Window", img);
+    //show the image
+    imshow("My Window", img);
 
-      // Wait until user press some key
-     waitKey(0);
+    // Wait until user press some key
+    waitKey(0);
     cout << "foreground, background selection finished !" << endl;
     
     // calculate average foreground, background r g b values
@@ -146,7 +146,7 @@ int main()
     // likelihood: process all the unknown pixels(neither foreground nor background)
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
-           if((pixel_array[i][j].whatisit != 2) && (pixel_array[i][j].whatisit != 4)){
+            if((pixel_array[i][j].whatisit != 2) && (pixel_array[i][j].whatisit != 4)){
                 double df = min(min(abs(pixel_array[i][j].r-fore_r),abs(pixel_array[i][j].g-fore_g)),abs(pixel_array[i][j].b-fore_b));
                 double db = min(min(abs(pixel_array[i][j].r-back_r),abs(pixel_array[i][j].g-back_g)),abs(pixel_array[i][j].b-back_b));
                 pixel_array[i][j].foreground = df/(df+db);
@@ -154,7 +154,7 @@ int main()
                 //if(j == 128){
                 //    cout << pixel_array[i][j].foreground << " " << pixel_array[i][j].background << endl;
                 //}
-           }
+            }
         }
     }
 
@@ -251,8 +251,30 @@ int main()
     else
         printf("node0 is in the SINK set\n");
     
-    
+    Mat result(height, width, img.type());
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            int index = i*height+j;
+            if(g->what_segment(index) == GraphType::SOURCE){
+                result.at<Vec3b>(i,j).val[0] = 255;
+                result.at<Vec3b>(i,j).val[1] = 0;
+                result.at<Vec3b>(i,j).val[2] = 0;
+            }
+            else{
+                result.at<Vec3b>(i,j).val[0] = 0;
+                result.at<Vec3b>(i,j).val[1] = 255;
+                result.at<Vec3b>(i,j).val[2] = 0;
+            }
+        }
+    }
 
+    //Create a window
+    namedWindow("result", 1);
+
+    //show the image
+    imshow("result", result);
+    
+    waitKey(0);
 
     delete g;
 
