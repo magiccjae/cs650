@@ -1,0 +1,160 @@
+#include <stdio.h>
+#include "graph.h"
+#include "opencv2/highgui/highgui.hpp"
+#include <iostream>
+
+using namespace std;
+using namespace cv;
+
+class pixel{
+	public:
+		int row;
+		int col;
+		int r;
+		int g;
+		int b;
+		double foreground;
+		double background;
+		double prior_energy[8];
+};
+
+Mat img;
+
+
+void CallBackFunc(int event, int x, int y, int flags, void* userdata)
+{
+    Vec3b pix = img.at<Vec3b>(y,x);
+    int b = pix.val[0];
+    int g = pix.val[1];
+    int r = pix.val[2];
+    cout << r << " " << g << " " << b << endl;
+     if  ( event == EVENT_LBUTTONDOWN )		// foreground select
+     {
+          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if  ( event == EVENT_RBUTTONDOWN ) 		// background select
+     {
+          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if  ( event == EVENT_MBUTTONDOWN )
+     {
+          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if ( event == EVENT_MOUSEMOVE )
+     {
+          cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
+     }
+}
+
+int main()
+{
+     // Read image from file 
+     img = imread("drone.jpg");
+
+     //if fail to read the image
+     if ( img.empty() ) 
+     { 
+          cout << "Error loading the image" << endl;
+          return -1; 
+     }
+
+      //Create a window
+     namedWindow("My Window", 1);
+
+      //set the callback function for any mouse event
+     setMouseCallback("My Window", CallBackFunc, NULL);
+
+      //show the image
+     imshow("My Window", img);
+
+      // Wait until user press some key
+     waitKey(0);
+	 cout << "foreground, background selection finished !" << endl;
+	
+    typedef Graph<int,int,int> GraphType;
+    GraphType *g = new GraphType(/*estimated # of nodes*/ 9, /*estimated # of edges*/ 12);
+
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+    g -> add_node();
+
+    int small = 0;
+    int middle = 100;
+    int big = 10000;
+
+    g -> add_tweights( 0,   /* capacities */  small, big );
+    g -> add_tweights( 1,   /* capacities */  middle, middle );
+    g -> add_tweights( 2,   /* capacities */  middle, middle );
+    g -> add_tweights( 3,   /* capacities */  middle, middle );
+    g -> add_tweights( 4,   /* capacities */  middle, middle );
+    g -> add_tweights( 5,   /* capacities */  middle, middle );
+    g -> add_tweights( 6,   /* capacities */  middle, middle );
+    g -> add_tweights( 7,   /* capacities */  middle, middle );
+    g -> add_tweights( 8,   /* capacities */  big, small );
+
+    g -> add_edge( 0, 1,    /* capacities */  7, 7 );
+    g -> add_edge( 0, 3,    /* capacities */  8, 8 );
+    g -> add_edge( 1, 2,    /* capacities */  2, 2 );
+    g -> add_edge( 1, 4,    /* capacities */  4, 4 );
+    g -> add_edge( 2, 5,    /* capacities */  7, 7 );
+    g -> add_edge( 3, 4,    /* capacities */  2, 2 );
+    g -> add_edge( 3, 6,    /* capacities */  7, 7 );
+    g -> add_edge( 4, 5,    /* capacities */  3, 3 );
+    g -> add_edge( 4, 7,    /* capacities */  6, 6 );
+    g -> add_edge( 5, 8,    /* capacities */  8, 8 );
+    g -> add_edge( 6, 7,    /* capacities */  2, 2 );
+    g -> add_edge( 7, 8,    /* capacities */  7, 7 );
+
+    int flow = g -> maxflow();
+
+    printf("Flow = %d\n", flow);
+    printf("Minimum cut:\n");
+    if (g->what_segment(0) == GraphType::SOURCE)
+        printf("node0 is in the SOURCE set\n");
+    else
+        printf("node0 is in the SINK set\n");
+    if (g->what_segment(1) == GraphType::SOURCE)
+        printf("node1 is in the SOURCE set\n");
+    else
+        printf("node1 is in the SINK set\n");
+    if (g->what_segment(2) == GraphType::SOURCE)
+        printf("node2 is in the SOURCE set\n");
+    else
+        printf("node2 is in the SINK set\n");
+    if (g->what_segment(3) == GraphType::SOURCE)
+        printf("node3 is in the SOURCE set\n");
+    else
+        printf("node3 is in the SINK set\n");
+    if (g->what_segment(4) == GraphType::SOURCE)
+        printf("node4 is in the SOURCE set\n");
+    else
+        printf("node4 is in the SINK set\n");
+    if (g->what_segment(5) == GraphType::SOURCE)
+        printf("node5 is in the SOURCE set\n");
+    else
+        printf("node5 is in the SINK set\n");
+    if (g->what_segment(6) == GraphType::SOURCE)
+        printf("node6 is in the SOURCE set\n");
+    else
+        printf("node6 is in the SINK set\n");
+    if (g->what_segment(7) == GraphType::SOURCE)
+        printf("node7 is in the SOURCE set\n");
+    else
+        printf("node7 is in the SINK set\n");
+    if (g->what_segment(8) == GraphType::SOURCE)
+        printf("node8 is in the SOURCE set\n");
+    else
+        printf("node8 is in the SINK set\n");
+
+
+    delete g;
+
+    return 0;
+}
+
