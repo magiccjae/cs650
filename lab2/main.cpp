@@ -24,18 +24,13 @@ Mat img;
 Pixel **pixel_array;
 int small = 0;
 int big = 100;
+int selection_mode = 0;
 
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
-
     if  ( event == EVENT_LBUTTONDOWN )		// foreground select
     {
-        cout << "foreground selected at " << y << " " << x << endl;
-        cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
-        pixel_array[y][x].foreground = small;
-        pixel_array[y][x].background = big;
-        pixel_array[y][x].whatisit = 2;
-        
+        selection_mode = 1;
     }
     else if  ( event == EVENT_RBUTTONDOWN )
     {
@@ -43,23 +38,39 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
     }
     else if  ( event == EVENT_MBUTTONDOWN )        // background select
     {
-        cout << "background selected at " << y << " " << x << endl;
-        cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
-        pixel_array[y][x].foreground = big;
-        pixel_array[y][x].background = small;
-        pixel_array[y][x].whatisit = 4;
+        selection_mode = 2;
         
+    }
+    else if(event == EVENT_LBUTTONUP){
+        selection_mode = 0;
+    }
+    else if(event == EVENT_MBUTTONUP){
+        selection_mode = 0;
     }
     else if ( event == EVENT_MOUSEMOVE )
     {
         // cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
+        if(selection_mode == 1){
+            cout << "foreground selected at " << y << " " << x << endl;
+            cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
+            pixel_array[y][x].foreground = small;
+            pixel_array[y][x].background = big;
+            pixel_array[y][x].whatisit = 2;           
+        }
+        else if(selection_mode == 2){
+            cout << "background selected at " << y << " " << x << endl;
+            cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
+            pixel_array[y][x].foreground = big;
+            pixel_array[y][x].background = small;
+            pixel_array[y][x].whatisit = 4;
+        }
     }
 }
 
 int main()
 {
     // Read image from file
-    img = imread("apples.jpg");
+    img = imread("twitter.jpg");
 
     //if fail to read the image
     if ( img.empty() )
@@ -163,9 +174,21 @@ int main()
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             //cout << i << " " << j << endl;
-            likelihood.at<Vec3b>(i,j).val[0] = pixel_array[i][j].foreground*255;
-            likelihood.at<Vec3b>(i,j).val[1] = pixel_array[i][j].foreground*255;
-            likelihood.at<Vec3b>(i,j).val[2] = pixel_array[i][j].foreground*255;
+            if(pixel_array[i][j].whatisit == 2){
+                likelihood.at<Vec3b>(i,j).val[0] = 255;
+                likelihood.at<Vec3b>(i,j).val[1] = 0;
+                likelihood.at<Vec3b>(i,j).val[2] = 0;
+            }
+            else if(pixel_array[i][j].whatisit == 4){
+                likelihood.at<Vec3b>(i,j).val[0] = 0;
+                likelihood.at<Vec3b>(i,j).val[1] = 255;
+                likelihood.at<Vec3b>(i,j).val[2] = 0;
+            }
+            else{
+                likelihood.at<Vec3b>(i,j).val[0] = pixel_array[i][j].foreground*255;
+                likelihood.at<Vec3b>(i,j).val[1] = pixel_array[i][j].foreground*255;
+                likelihood.at<Vec3b>(i,j).val[2] = pixel_array[i][j].foreground*255;
+            }
         }
     }
 
