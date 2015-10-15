@@ -1,0 +1,2 @@
+#!/bin/sh
+g++ mouse_example.cpp $(pkg-config opencv --cflags --libs)

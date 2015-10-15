@@ -1,0 +1,63 @@
+#include "opencv2/highgui/highgui.hpp"
+#include <iostream>
+
+using namespace std;
+using namespace cv;
+
+Mat img;
+
+void CallBackFunc(int event, int x, int y, int flags, void* userdata)
+{
+    Vec3b pix = img.at<Vec3b>(y,x);
+    int b = pix.val[0];
+    int g = pix.val[1];
+    int r = pix.val[2];
+    cout << r << " " << g << " " << b << endl;
+     if  ( event == EVENT_LBUTTONDOWN )
+     {
+          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+          
+     }
+     else if  ( event == EVENT_RBUTTONDOWN )
+     {
+          cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if  ( event == EVENT_MBUTTONDOWN )
+     {
+          cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+     }
+     else if ( event == EVENT_MOUSEMOVE )
+     {
+          cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
+     }
+}
+
+int main(int argc, char** argv)
+{
+     // Read image from file 
+     img = imread("drone.jpg");
+
+      //if fail to read the image
+     if ( img.empty() ) 
+     { 
+          cout << "Error loading the image" << endl;
+          return -1; 
+     }
+
+      //Create a window
+     namedWindow("My Window", 1);
+
+      //set the callback function for any mouse event
+     setMouseCallback("My Window", CallBackFunc, NULL);
+
+      //show the image
+     imshow("My Window", img);
+
+      // Wait until user press some key
+     waitKey(0);
+	 cout << "byebye!" << endl;
+
+      return 0;
+
+}
+
