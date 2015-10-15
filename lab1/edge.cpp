@@ -6,7 +6,7 @@
 #include <math.h>
 
 using namespace std;
-
+   
 
 void calculate_gradient(int **data_array, double **gradient_magnitude, double **gradient_orientation, int height, int width){
 
