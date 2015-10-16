@@ -172,7 +172,7 @@ int main()
     Mat labels1;
     Mat labels2;
     
-    int num_clusters = 4;
+    int num_clusters = 100;
     Mat fore_centers;
     Mat back_centers;
     
@@ -292,7 +292,7 @@ int main()
         g -> add_node();
     }
     
-    int lambda = 3;
+    int lambda = 10;
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             int index = i*width+j;
