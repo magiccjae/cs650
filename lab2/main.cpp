@@ -55,7 +55,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
             cout << "r g b value " << pixel_array[y][x].r << " " << pixel_array[y][x].g << " " << pixel_array[y][x].b << endl;
             pixel_array[y][x].foreground = small;
             pixel_array[y][x].background = big;
-            pixel_array[y][x].whatisit = 2;           
+            pixel_array[y][x].whatisit = 2;
         }
         else if(selection_mode == 2){
             cout << "background selected at " << y << " " << x << endl;
@@ -115,49 +115,74 @@ int main()
     waitKey(0);
     cout << "foreground, background selection finished !" << endl;
     
-    // calculate average foreground, background r g b values
-    double fore_r = 0;
-    double fore_g = 0;
-    double fore_b = 0;
+    // K means
     int num_fore = 0;
-
-    double back_r = 0;
-    double back_g = 0;
-    double back_b = 0;
     int num_back = 0;
-
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             if(pixel_array[i][j].whatisit == 2){    // 2 for foreground
-                fore_r += pixel_array[i][j].r;
-                fore_g += pixel_array[i][j].g;
-                fore_b += pixel_array[i][j].b;
                 num_fore++;
             }
             else if(pixel_array[i][j].whatisit == 4){
-                back_r += pixel_array[i][j].r;
-                back_g += pixel_array[i][j].g;
-                back_b += pixel_array[i][j].b;
                 num_back++;
             }
         }
     }
-    fore_r /= num_fore;
-    fore_g /= num_fore;
-    fore_b /= num_fore;
+   
+    Mat fore_mat(num_fore, 3, CV_32F);
+    Mat back_mat(num_back, 3, CV_32F);
 
-    back_r /= num_back;
-    back_g /= num_back;
-    back_b /= num_back;
+    int fore_row = 0;
+    int fore_col = 0;
+    int back_row = 0;
+    int back_col = 0;
+    cout << "num_fore " << num_fore << endl;
+    cout << "num_back " << num_back << endl;
+
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            if(pixel_array[i][j].whatisit == 2){
+                fore_mat.at<float>(fore_row, fore_col) = pixel_array[i][j].r;
+                fore_col++;
+                fore_mat.at<float>(fore_row, fore_col) = pixel_array[i][j].g;
+                fore_col++;
+                fore_mat.at<float>(fore_row, fore_col) = pixel_array[i][j].b;
+                fore_col = 0;
+                fore_row++;
+            }
+            else if(pixel_array[i][j].whatisit == 4){
+                back_mat.at<float>(back_row, back_col) = pixel_array[i][j].r;
+                back_col++;
+                back_mat.at<float>(back_row, back_col) = pixel_array[i][j].g;
+                back_col++;
+                back_mat.at<float>(back_row, back_col) = pixel_array[i][j].b;
+                back_col = 0;
+                back_row++;
+            }
+        }
+    }
     
-    cout << "# of foreground " << num_fore << " # of background " << num_back << endl;
-    cout << "foreground mean r g b " << fore_r << " " << fore_g << " " << fore_b << endl;
-    cout << "background mean r g b " << back_r << " " << back_g << " " << back_b << endl;
+    cout << "# of foreground " << fore_row << " # of background " << back_row << endl;
+
+    Mat labels1;
+    Mat labels2;
+    
+    int num_clusters = 3;
+    Mat fore_centers;
+    Mat back_centers;
+    
+    kmeans(fore_mat, num_clusters, labels1, TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 0.5), 5, KMEANS_PP_CENTERS, fore_centers);
+    kmeans(back_mat, num_clusters, labels2, TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 0.8), 5, KMEANS_PP_CENTERS, back_centers);
+
+    cout << "fore_centers" << endl << fore_centers << endl;
+
+    cout << "back_centers" << endl << back_centers << endl;
 
     // likelihood: process all the unknown pixels(neither foreground nor background)
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             if((pixel_array[i][j].whatisit != 2) && (pixel_array[i][j].whatisit != 4)){
+                
                 double df = min(min(abs(pixel_array[i][j].r-fore_r),abs(pixel_array[i][j].g-fore_g)),abs(pixel_array[i][j].b-fore_b));
                 double db = min(min(abs(pixel_array[i][j].r-back_r),abs(pixel_array[i][j].g-back_g)),abs(pixel_array[i][j].b-back_b));
                 pixel_array[i][j].foreground = df/(df+db);
