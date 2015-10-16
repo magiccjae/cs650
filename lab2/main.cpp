@@ -70,7 +70,12 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 int main()
 {
     // Read image from file
-    img = imread("twitter.jpg");
+    // twitter.jpg
+    // apples.jpg
+    // apple.jpg
+    // drone.jpg
+    // simplecircle.ppm
+    img = imread("drone.jpg");
 
     //if fail to read the image
     if ( img.empty() )
@@ -167,12 +172,12 @@ int main()
     Mat labels1;
     Mat labels2;
     
-    int num_clusters = 3;
+    int num_clusters = 4;
     Mat fore_centers;
     Mat back_centers;
     
-    kmeans(fore_mat, num_clusters, labels1, TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 0.5), 5, KMEANS_PP_CENTERS, fore_centers);
-    kmeans(back_mat, num_clusters, labels2, TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 0.8), 5, KMEANS_PP_CENTERS, back_centers);
+    kmeans(fore_mat, num_clusters, labels1, TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 0.1), 5, KMEANS_PP_CENTERS, fore_centers);
+    kmeans(back_mat, num_clusters, labels2, TermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 0.1), 5, KMEANS_PP_CENTERS, back_centers);
 
     cout << "fore_centers" << endl << fore_centers << endl;
 
@@ -182,11 +187,30 @@ int main()
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             if((pixel_array[i][j].whatisit != 2) && (pixel_array[i][j].whatisit != 4)){
-                
-                double df = min(min(abs(pixel_array[i][j].r-fore_r),abs(pixel_array[i][j].g-fore_g)),abs(pixel_array[i][j].b-fore_b));
-                double db = min(min(abs(pixel_array[i][j].r-back_r),abs(pixel_array[i][j].g-back_g)),abs(pixel_array[i][j].b-back_b));
-                pixel_array[i][j].foreground = df/(df+db);
-                pixel_array[i][j].background = db/(df+db);
+                double min_fore = 1000;
+                double min_back = 1000;
+                int pixel_red = pixel_array[i][j].r;
+                int pixel_green = pixel_array[i][j].g;
+                int pixel_blue = pixel_array[i][j].b;
+                for(int k = 0; k < num_clusters; k++){
+                    float fore_red = fore_centers.at<float>(k,0);
+                    float fore_green = fore_centers.at<float>(k,1);
+                    float fore_blue = fore_centers.at<float>(k,2);
+                    float back_red = back_centers.at<float>(k,0);
+                    float back_green = back_centers.at<float>(k,1);
+                    float back_blue = back_centers.at<float>(k,2);
+                    
+                    int fore_distance = abs(fore_red-pixel_red)+abs(fore_green-pixel_green)+abs(fore_blue-pixel_blue);
+                    int back_distance = abs(back_red-pixel_red)+abs(back_green-pixel_green)+abs(back_blue-pixel_blue);
+                    if(min_fore > fore_distance){
+                        min_fore = fore_distance;
+                    }
+                    if(min_back > back_distance){
+                        min_back = back_distance;
+                    }
+                }
+                pixel_array[i][j].foreground = min_fore/(min_fore+min_back);
+                pixel_array[i][j].background = min_back/(min_fore+min_back);
                 //if(j == 128){
                 //    cout << pixel_array[i][j].foreground << " " << pixel_array[i][j].background << endl;
                 //}
@@ -195,7 +219,6 @@ int main()
     }
     
     Mat likelihood(height,width,img.type());
-    cout << likelihood.type() << " " << likelihood.channels() << endl;
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             //cout << i << " " << j << endl;
@@ -220,7 +243,8 @@ int main()
     namedWindow("likelihood", CV_WINDOW_AUTOSIZE);
     imshow("likelihood", likelihood);
     waitKey(0);
-
+    
+    int count = 0;
     // prior energy
     int neighbors = 8;
     for(int i = 0; i < height; i++){
@@ -254,10 +278,12 @@ int main()
                     }
                     double g = 1.0/(cij+1);
                     pixel_array[i][j].prior_energy[k] = g;
+                    count++;
                 }
             }
         }
     }
+    cout << "count for prior energy " << count << endl;
 
     typedef Graph<int,int,int> GraphType;
     GraphType *g = new GraphType(/*estimated # of nodes*/ total, /*estimated # of edges*/ total_edges);
@@ -265,14 +291,16 @@ int main()
     for(int i = 0; i < total; i++){
         g -> add_node();
     }
-
+    
+    int lambda = 3;
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
             int index = i*width+j;
-            g -> add_tweights(index, pixel_array[i][j].foreground, pixel_array[i][j].background);
+            g -> add_tweights(index, pixel_array[i][j].foreground*lambda, pixel_array[i][j].background*lambda);
         }
     }
     
+    int count2 = 0;
     for(int i = 1; i < height-1; i++){
         for(int j = 1; j < width-1; j++){
             int index = i*width+j;
@@ -301,9 +329,11 @@ int main()
                 else if(k == 7){
                     g -> add_edge(index, index+width+1, pixel_array[i][j].prior_energy[7], pixel_array[i][j].prior_energy[7]);
                 }
+                count2++;
             }
         }
     }
+    cout << "count for add_edge " << count2 << endl;
 
     int flow = g -> maxflow();
 
@@ -317,7 +347,7 @@ int main()
     Mat result(height, width, img.type());
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
-            int index = i*height+j;
+            int index = i*width+j;
             if(g->what_segment(index) == GraphType::SOURCE){
                 result.at<Vec3b>(i,j).val[0] = 255;
                 result.at<Vec3b>(i,j).val[1] = 255;
