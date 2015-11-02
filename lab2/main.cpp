@@ -354,9 +354,9 @@ int main()
                 result.at<Vec3b>(i,j).val[2] = 255;
             }
             else{
-                result.at<Vec3b>(i,j).val[0] = 0;
-                result.at<Vec3b>(i,j).val[1] = 0;
-                result.at<Vec3b>(i,j).val[2] = 0;
+                result.at<Vec3b>(i,j).val[0] = pixel_array[i][j].b;
+                result.at<Vec3b>(i,j).val[1] = pixel_array[i][j].g;
+                result.at<Vec3b>(i,j).val[2] = pixel_array[i][j].r;
             }
         }
     }

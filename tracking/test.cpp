@@ -1,0 +1,23 @@
+#include "opencv2/core/core.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/nonfree/features2d.hpp" //Thanks to Alessandro
+
+int main(int argc, const char* argv[])
+{
+    const cv::Mat input = cv::imread("car.jpg", 0); //Load as grayscale
+    
+    cv::namedWindow("window",CV_WINDOW_AUTOSIZE);
+
+
+    cv::SiftFeatureDetector detector;
+    std::vector<cv::KeyPoint> keypoints;
+    detector.detect(input, keypoints);
+
+    // Add results to image and save.
+    cv::Mat output;
+    cv::drawKeypoints(input, keypoints, output);
+    cv::imwrite("sift_result.jpg", output);
+
+    return 0;
+}
+
