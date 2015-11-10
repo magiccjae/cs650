@@ -13,6 +13,7 @@ cv::Mat frame;
 cv::Mat mask;
 
 const char* src_window = "Select ROI";
+const char* sift_window = "SIFT";
 
 int drag = 0, select_flag = 0;
 
@@ -36,31 +37,26 @@ void mouseHandler(int event, int x, int y, int flags, void* param);
 
 int main(int argc, char** argv)
 {
-//    cv::VideoCapture cap;
-//
-//    if( argc == 1 || (argc == 2 && strlen(argv[1]) == 1 && isdigit(argv[1][0])))
-//        cap.open(argc == 2 ? argv[1][0] - '0' : 0);
-//    else if( argc == 2 )
-//    cap.open(argv[1]);
-//
-//    if( !cap.isOpened() )
-//    {
-//        std::cout << "Could not initialize capturing...\n";
-//        return 0;
-//    }
-//
-//    cap >> frame;
+    cv::VideoCapture cap("carchase.mp4");
 
-    frame = imread("car.jpg");
-    mask = Mat::zeros(frame.size(),CV_8U);
-    split(frame, bgr_planes);
-
+    if( !cap.isOpened() )
+    {
+        std::cout << "Could not initialize capturing...\n";
+        return 0;
+    }
+    
     cv::namedWindow(src_window,CV_WINDOW_AUTOSIZE);
-    cv::imshow(src_window,frame);
-
+    cv::namedWindow(sift_window,CV_WINDOW_AUTOSIZE);
     cv::setMouseCallback(src_window,mouseHandler,0);
-    waitKey(0);
-
+    
+    for(;;){
+        cap >> frame;
+//    frame = imread("car.jpg");
+        mask = Mat::zeros(frame.size(),CV_8U);
+        split(frame, bgr_planes);
+        cv::imshow(src_window,frame);
+        if(waitKey(30)>=0) break;
+    }
 //    for (;;)
 //    {
 //        if(callback)
@@ -156,7 +152,7 @@ void mouseHandler(int event, int x, int y, int flags, void* param)
         
         cv::rectangle(img2, point1, point2, CV_RGB(255, 0, 0), 1, 8, 0);
         cv::drawKeypoints(img2, keypoints, img2);
-        cv::imshow(src_window, img2);
+        cv::imshow(sift_window, img2);
 
 //        	callback = true;
     }
