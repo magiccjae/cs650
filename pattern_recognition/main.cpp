@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <string>
 
 using namespace cv;
 using namespace std;
@@ -12,14 +13,16 @@ Mat image;
 int b_background;
 int g_background;
 int r_background;
+int** label_array;
+vector<Mat> shape_container;
 
-Mat connected_component(int row, int col);
-int find_howmany(Mat connected_image, int row, int col);
-void cal_compactness(Mat connected_image, int row, int col);
+void connected_component(int row, int col);
+int find_howmany(int row, int col);
+Mat show_connected(int row, int col);
 
 int main(){
 	
-    image = image = imread("testshapes.pgm");
+    image = image = imread("shapes.pgm");
     if(! image.data ){                              // Check for invalid input
         cout <<  "Could not open or find the image" << std::endl ;
         return -1;
@@ -32,21 +35,31 @@ int main(){
     int col = image.cols;
     cout << row << " x " << col << " image" << endl;
     
+    label_array = new int *[row];
+    for(int i = 0; i < row; i++){
+        label_array[i] = new int[col];
+        for(int j = 0; j < col; j++){
+            label_array[i][j] = 0;
+        }
+    }
+
     b_background = (int)image.at<Vec3b>(0,0)[0];
     g_background = (int)image.at<Vec3b>(0,0)[1];
     r_background = (int)image.at<Vec3b>(0,0)[2];
     cout << "background rgb  " << b_background << " " << g_background << " " << r_background << endl;
     
-    Mat connected_image;
-    
-    connected_image = connected_component(row, col);
-    namedWindow( "connected", WINDOW_AUTOSIZE );
-    imshow( "connected", connected_image );
-    
-    int howmany = find_howmany(connected_image,row,col);
-    cout << "the number of shapes:  " << howmany << endl;
 
+    connected_component(row, col);
     
+    Mat check = show_connected(row, col);
+
+    int howmany = find_howmany(row, col);
+    cout << "the number of shapes:  " << shape_container.size() << endl;
+    for(int i = 0; i < shape_container.size(); i++){
+        namedWindow("hey",WINDOW_NORMAL);
+        imshow("hey",shape_container.at(i));
+        waitKey(0);
+    }
 
     waitKey(0);                                          // Wait for a keystroke in the window
 	
@@ -54,26 +67,89 @@ int main(){
 
 }
 
-void cal_compactness(Mat connected_image){
-    
-}
-
-int find_howmany(Mat connected_image, int row, int col){
+// find how many different shapes are in the image
+int find_howmany(int row, int col){
     set<int> myset;
     for(int i = 0; i < row; i++){
         for(int j = 0; j < col; j++){
-            if(connected_image.at<Vec3b>(i,j)[0] != 0){
-                myset.insert(connected_image.at<Vec3b>(i,j)[0]);
+            if(label_array[i][j] != 0){
+                myset.insert(label_array[i][j]);
             }
         }
     }
+
+    for(set<int>::iterator it=myset.begin(); it!=myset.end(); ++it){
+        int count = 0;
+        int xmin = col;
+        int xmax = 0;
+        int ymin = row;
+        int ymax = 0;
+        for(int i = 0; i < row; i++){
+            for(int j = 0; j < col; j++){
+                if(label_array[i][j] == *it){
+                    count++;
+                    if(xmin > j){
+                        xmin = j;
+                    }
+                    if(xmax < j){
+                        xmax = j;
+                    }
+                    if(ymin > i){
+                        ymin = i;
+                    }
+                    if(ymax < i){
+                        ymax = i;
+                    }
+                }
+            }
+        }
+        cout << xmin << "  " << xmax << endl;
+        cout << ymin << "  " << ymax << endl;
+        Mat object(image, Rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1));
+        shape_container.push_back(object);
+//        namedWindow("object",WINDOW_NORMAL);
+//        imshow("object",object);
+//        waitKey(0);
+        cout <<"for label: " << *it << "  area:  " << count << endl;
+
+    }
+
     return myset.size();
 
 }
 
-Mat connected_component(int row, int col){
+// display the result image of connected component
+Mat show_connected(int row, int col){
+    Mat check(row,col,image.type());
+    
+    for(int i = 0; i < row; i++){
+        for(int j = 0; j < col; j++){
+            if(label_array[i][j] != 0){
+//                check.at<Vec3b>(i,j)[0] = 255-label_array[i][j];
+//                check.at<Vec3b>(i,j)[1] = 255;
+//                check.at<Vec3b>(i,j)[2] = label_array[i][j];
+                check.at<Vec3b>(i,j)[0] = label_array[i][j];
+                check.at<Vec3b>(i,j)[1] = label_array[i][j];
+                check.at<Vec3b>(i,j)[2] = label_array[i][j];
+            }
+            else{
+                check.at<Vec3b>(i,j)[0] = 0;
+                check.at<Vec3b>(i,j)[1] = 0;
+                check.at<Vec3b>(i,j)[2] = 0;
+            }
+        }
+    }
+    
+    namedWindow( "connected", WINDOW_AUTOSIZE );
+    imshow( "connected", check );
+    return check;
+}
+
+
+// figure out different shapes in the image
+void connected_component(int row, int col){
     map<int,int> mymap;
-    int label_array[row][col];
+//    int label_array[row][col];
     for(int i = 0; i < row; i++){
         for(int j = 0; j < col; j++){
             label_array[i][j] = 0;
@@ -151,22 +227,4 @@ Mat connected_component(int row, int col){
         }
     }
     
-    Mat check(row, col, image.type());
-    
-    for(int i = 0; i < row; i++){
-        for(int j = 0; j < col; j++){
-            if(label_array[i][j] != 0){
-                check.at<Vec3b>(i,j)[0] = 255-label_array[i][j];
-                check.at<Vec3b>(i,j)[1] = 255;
-                check.at<Vec3b>(i,j)[2] = label_array[i][j];
-            }
-            else{
-                check.at<Vec3b>(i,j)[0] = 0;
-                check.at<Vec3b>(i,j)[1] = 0;
-                check.at<Vec3b>(i,j)[2] = 0;
-            }
-        }
-    }
-
-    return check;
 }
