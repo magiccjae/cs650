@@ -47,10 +47,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jae/src/github/cs650/pattern_recognition
+CMAKE_SOURCE_DIR = /home/magiccjae/src/github/cs650/pattern_recognition
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jae/src/github/cs650/pattern_recognition
+CMAKE_BINARY_DIR = /home/magiccjae/src/github/cs650/pattern_recognition
 
 #=============================================================================
 # Target rules for target CMakeFiles/pattern.dir
@@ -59,7 +59,7 @@ CMAKE_BINARY_DIR = /home/jae/src/github/cs650/pattern_recognition
 CMakeFiles/pattern.dir/all:
 	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/depend
 	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/jae/src/github/cs650/pattern_recognition/CMakeFiles  1
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles  1
 	@echo "Built target pattern"
 .PHONY : CMakeFiles/pattern.dir/all
 
@@ -69,9 +69,9 @@ all: CMakeFiles/pattern.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/pattern.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jae/src/github/cs650/pattern_recognition/CMakeFiles 1
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles 1
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/pattern.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jae/src/github/cs650/pattern_recognition/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles 0
 .PHONY : CMakeFiles/pattern.dir/rule
 
 # Convenience name for target.

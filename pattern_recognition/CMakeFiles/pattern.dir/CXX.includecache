@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/jae/src/github/cs650/pattern_recognition/main.cpp
+/home/magiccjae/src/github/cs650/pattern_recognition/main.cpp
 opencv2/core/core.hpp
 -
 opencv2/highgui/highgui.hpp
@@ -16,6 +16,8 @@ iostream
 algorithm
 -
 map
+-
+set
 -
 
 /usr/local/include/opencv2/core/core.hpp
