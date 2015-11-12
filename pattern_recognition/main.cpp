@@ -18,7 +18,7 @@ public:
     int area;
     int perimeter;
     double compactness;
-
+    double fb_ratio;   // background pixel / foreground pixel
 };
 
 
@@ -70,14 +70,32 @@ int main(){
     int howmany = find_howmany(row, col);
     cout << "the number of shapes:  " << shape_container.size() << endl;
     calculate_compactness();
-    get_profile();
+//    get_profile();
+
     for(int i = 0; i < shape_container.size(); i++){
+        Feature temp = shape_container.at(i);
         namedWindow("object",WINDOW_NORMAL);
-        imshow("object",shape_container.at(i).object);
-        cout << "label:  " << shape_container.at(i).label << "  area:  " << shape_container.at(i).area << endl;
-        cout << "perimeter:  " << shape_container.at(i).perimeter << "  compactness:  " << shape_container.at(i).compactness << endl;
+        imshow("object",temp.object);
+        cout << "label:  " << temp.label << "  area:  " << temp.area << endl;
+        cout << "perimeter:  " << temp.perimeter << "  compactness:  " << temp.compactness << endl;
+        cout << "fb_ratio:  " << temp.fb_ratio << endl;
         waitKey(0);
     }
+    int num_feature = 2;
+    Mat input_samples(shape_container.size(), num_feature, CV_32F);
+    for(int i = 0; i < shape_container.size(); i++){
+        input_samples.at<float>(i,0) = shape_container.at(i).compactness;
+        input_samples.at<float>(i,1) = shape_container.at(i).fb_ratio;
+    }
+    Mat result_clusters;
+    int num_clusters = 5;
+    Mat centers;
+    int attempts = 10;
+    kmeans(input_samples, num_clusters, result_clusters, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,10,0.01), attempts, KMEANS_PP_CENTERS, centers);
+    cout << result_clusters << endl;
+    cout << centers << endl;
+    
+    
 
     waitKey(0);                                          // Wait for a keystroke in the window
 	
@@ -132,6 +150,7 @@ void calculate_compactness(){
     for(int i = 0; i < shape_container.size(); i++){
         Mat temp_image = shape_container.at(i).object;
         int perimeter = 0;
+        int num_back = 0;
         for(int j = 0; j < temp_image.rows; j++){
             for(int k = 0; k < temp_image.cols; k++){
                 if(temp_image.at<Vec3b>(j,k)[0] != 0){
@@ -144,11 +163,25 @@ void calculate_compactness(){
                         }
                     }
                 }
+                else{
+                    num_back++;
+                }
             }
         }
         shape_container.at(i).perimeter = perimeter;
-        shape_container.at(i).compactness = pow(perimeter,2)/(double)shape_container.at(i).area;
+        double compactness = pow(perimeter,2)/(double)shape_container.at(i).area;
+        if(compactness > 100){
+            compactness = 100;
+        }
+        shape_container.at(i).compactness = compactness;
+        double fb_ratio = (double)num_back/(double)shape_container.at(i).area * 100;
+        if(fb_ratio > 200){
+            fb_ratio = 200;
+        }
+        shape_container.at(i).fb_ratio = fb_ratio;
 //        cout << "perimeter:  " << perimeter << endl;
+//        cout << "foreground:  " << shape_container.at(i).area << "  background:  " << num_back << endl;
+//        cout << "total:  " << shape_container.at(i).area + num_back << "  row x col:  " << temp_image.rows*temp_image.cols << endl;
 //        namedWindow("temp",WINDOW_NORMAL);
 //        imshow("temp",shape_container.at(i).object);
 //        waitKey(0);
