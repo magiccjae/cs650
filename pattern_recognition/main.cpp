@@ -1,24 +1,39 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <map>
 #include <set>
 #include <string>
+#include <cmath>
 
 using namespace cv;
 using namespace std;
+
+class Feature{
+public:
+    Mat object;
+    int label;
+    int area;
+    int perimeter;
+    double compactness;
+
+};
+
 
 Mat image;
 int b_background;
 int g_background;
 int r_background;
 int** label_array;
-vector<Mat> shape_container;
+vector<Feature> shape_container;
 
 void connected_component(int row, int col);
 int find_howmany(int row, int col);
 Mat show_connected(int row, int col);
+void calculate_compactness();
+void get_profile();
 
 int main(){
 	
@@ -47,7 +62,6 @@ int main(){
     g_background = (int)image.at<Vec3b>(0,0)[1];
     r_background = (int)image.at<Vec3b>(0,0)[2];
     cout << "background rgb  " << b_background << " " << g_background << " " << r_background << endl;
-    
 
     connected_component(row, col);
     
@@ -55,16 +69,90 @@ int main(){
 
     int howmany = find_howmany(row, col);
     cout << "the number of shapes:  " << shape_container.size() << endl;
+    calculate_compactness();
+    get_profile();
     for(int i = 0; i < shape_container.size(); i++){
-        namedWindow("hey",WINDOW_NORMAL);
-        imshow("hey",shape_container.at(i));
+        namedWindow("object",WINDOW_NORMAL);
+        imshow("object",shape_container.at(i).object);
+        cout << "label:  " << shape_container.at(i).label << "  area:  " << shape_container.at(i).area << endl;
+        cout << "perimeter:  " << shape_container.at(i).perimeter << "  compactness:  " << shape_container.at(i).compactness << endl;
         waitKey(0);
     }
 
     waitKey(0);                                          // Wait for a keystroke in the window
 	
     return 0;
+}
 
+// profile
+void get_profile(){
+    ofstream horizontal;
+    ofstream vertical;
+    horizontal.open("horizontal.txt");
+    vertical.open("vertical.txt");
+
+    for(int i = 0; i < shape_container.size(); i++){
+        Mat temp_image = shape_container.at(i).object;
+        int row = temp_image.rows;
+        int col = temp_image.cols;
+        int horizontal_profile[col];    // pixel points for each column
+        int vertical_profile[row];      // pixel points for each row
+        for(int j = 0; j < row; j++){
+            vertical_profile[j] = 0;
+        }
+        for(int j = 0; j < col; j++){
+            horizontal_profile[j] = 0;
+        }
+        for(int j = 0; j < row; j++){
+            for(int k = 0; k < col; k++){
+                if(temp_image.at<Vec3b>(j,k)[0] != 0){
+                   vertical_profile[j]++;
+                }
+            }
+            vertical << vertical_profile[j] << " ";
+        }
+        vertical << "\n\n";
+        for(int j = 0; j < col; j++){
+            for(int k = 0; k < row; k++){
+                if(temp_image.at<Vec3b>(j,k)[0] != 0){
+                   horizontal_profile[j]++;
+                }
+            }
+            horizontal << horizontal_profile[j] << " ";
+        }
+        horizontal << "\n\n";
+    }
+    horizontal.close();
+    vertical.close();
+}
+
+// calculate compactness
+void calculate_compactness(){
+    // calculate perimeter first, then compactness
+    for(int i = 0; i < shape_container.size(); i++){
+        Mat temp_image = shape_container.at(i).object;
+        int perimeter = 0;
+        for(int j = 0; j < temp_image.rows; j++){
+            for(int k = 0; k < temp_image.cols; k++){
+                if(temp_image.at<Vec3b>(j,k)[0] != 0){
+                    if(j == 0 || j == temp_image.rows-1 || k == 0 || k == temp_image.cols-1){
+                        perimeter++;
+                    }
+                    else{
+                        if(temp_image.at<Vec3b>(j-1,k)[0] == 0 || temp_image.at<Vec3b>(j+1,k)[0] == 0 || temp_image.at<Vec3b>(j,k-1)[0] == 0 || temp_image.at<Vec3b>(j,k+1)[0] == 0){   // if any neighboring pixel is background, it's on edge
+                            perimeter++;
+                        }
+                    }
+                }
+            }
+        }
+        shape_container.at(i).perimeter = perimeter;
+        shape_container.at(i).compactness = pow(perimeter,2)/(double)shape_container.at(i).area;
+//        cout << "perimeter:  " << perimeter << endl;
+//        namedWindow("temp",WINDOW_NORMAL);
+//        imshow("temp",shape_container.at(i).object);
+//        waitKey(0);
+    }
 }
 
 // find how many different shapes are in the image
@@ -84,6 +172,25 @@ int find_howmany(int row, int col){
         int xmax = 0;
         int ymin = row;
         int ymax = 0;
+        Mat copy_image = image.clone();
+        for(int i = 0; i < row; i++){
+            for(int j = 0; j < col; j++){
+                if(label_array[i][j] != *it){
+                    copy_image.at<Vec3b>(i,j)[0] = 0;
+                    copy_image.at<Vec3b>(i,j)[1] = 0;
+                    copy_image.at<Vec3b>(i,j)[2] = 0;
+                }
+                else{
+                    copy_image.at<Vec3b>(i,j)[0] = 255;
+                    copy_image.at<Vec3b>(i,j)[1] = 255;
+                    copy_image.at<Vec3b>(i,j)[2] = 255;
+                }
+            }
+        }
+//        namedWindow("copy", WINDOW_AUTOSIZE);
+//        imshow("copy",copy_image);
+//        waitKey(0);
+
         for(int i = 0; i < row; i++){
             for(int j = 0; j < col; j++){
                 if(label_array[i][j] == *it){
@@ -103,14 +210,18 @@ int find_howmany(int row, int col){
                 }
             }
         }
-        cout << xmin << "  " << xmax << endl;
-        cout << ymin << "  " << ymax << endl;
-        Mat object(image, Rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1));
-        shape_container.push_back(object);
+//        cout << xmin << "  " << xmax << endl;
+//        cout << ymin << "  " << ymax << endl;
+        Mat object(copy_image, Rect(xmin, ymin, xmax-xmin+1, ymax-ymin+1));
+        Feature new_shape;
+        new_shape.object = object.clone();
+        new_shape.label = *it;
+        new_shape.area = count;
+        shape_container.push_back(new_shape);
 //        namedWindow("object",WINDOW_NORMAL);
 //        imshow("object",object);
 //        waitKey(0);
-        cout <<"for label: " << *it << "  area:  " << count << endl;
+//        cout <<"for label: " << *it << "  area:  " << count << endl;
 
     }
 
@@ -226,5 +337,4 @@ void connected_component(int row, int col){
             }
         }
     }
-    
 }

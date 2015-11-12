@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/jae/src/github/cs650/pattern_recognition/main.cpp" "/home/jae/src/github/cs650/pattern_recognition/CMakeFiles/pattern.dir/main.cpp.o"
+  "/home/magiccjae/src/github/cs650/pattern_recognition/main.cpp" "/home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles/pattern.dir/main.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 
