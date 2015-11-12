@@ -14,11 +14,16 @@ using namespace std;
 class Feature{
 public:
     Mat object;
+    int xmin;
+    int xmax;
+    int ymin;
+    int ymax;
     int label;
     int area;
     int perimeter;
     double compactness;
     double fb_ratio;   // background pixel / foreground pixel
+    int cluster;
 };
 
 
@@ -34,17 +39,19 @@ int find_howmany(int row, int col);
 Mat show_connected(int row, int col);
 void calculate_compactness();
 void get_profile();
+void linear_discriminant(Mat centers);
+void show_cluster();
 
 int main(){
 	
-    image = image = imread("shapes.pgm");
+    image = imread("train1.pgm");   // shapes.pgm  train1.pgm  train2.pgm
     if(! image.data ){                              // Check for invalid input
         cout <<  "Could not open or find the image" << std::endl ;
         return -1;
     }
     
-    namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
-    imshow( "Display window", image );                   // Show our image inside it.
+    namedWindow( "Training image", WINDOW_AUTOSIZE );// Create a window for display.
+    imshow( "Training image", image );                   // Show our image inside it.
 
     int row = image.rows;
     int col = image.cols;
@@ -72,15 +79,15 @@ int main(){
     calculate_compactness();
 //    get_profile();
 
-    for(int i = 0; i < shape_container.size(); i++){
-        Feature temp = shape_container.at(i);
-        namedWindow("object",WINDOW_NORMAL);
-        imshow("object",temp.object);
-        cout << "label:  " << temp.label << "  area:  " << temp.area << endl;
-        cout << "perimeter:  " << temp.perimeter << "  compactness:  " << temp.compactness << endl;
-        cout << "fb_ratio:  " << temp.fb_ratio << endl;
-        waitKey(0);
-    }
+//    for(int i = 0; i < shape_container.size(); i++){
+//        Feature temp = shape_container.at(i);
+//        namedWindow("object",WINDOW_NORMAL);
+//        imshow("object",temp.object);
+//        cout << "label:  " << temp.label << "  area:  " << temp.area << endl;
+//        cout << "perimeter:  " << temp.perimeter << "  compactness:  " << temp.compactness << endl;
+//        cout << "fb_ratio:  " << temp.fb_ratio << endl;
+//        waitKey(0);
+//    }
     int num_feature = 2;
     Mat input_samples(shape_container.size(), num_feature, CV_32F);
     for(int i = 0; i < shape_container.size(); i++){
@@ -92,57 +99,200 @@ int main(){
     Mat centers;
     int attempts = 10;
     kmeans(input_samples, num_clusters, result_clusters, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,10,0.01), attempts, KMEANS_PP_CENTERS, centers);
-    cout << result_clusters << endl;
-    cout << centers << endl;
+//    cout << "clusters:  " << result_clusters << endl;
+//    cout << "centroids:  " << centers << endl;
     
+    // assign cluster number for each shape in shape_container
+    for(int i = 0; i < shape_container.size(); i++){
+       shape_container.at(i).cluster = result_clusters.at<int>(i,0);
+//       cout << shape_container.at(i).cluster << endl;
+    }
+
+    show_cluster();
+
+    image = imread("match1.pgm");       // testshapes.pgm  match1.pgm   match2.pgm
+    if(! image.data ){                              // Check for invalid input
+        cout <<  "Could not open or find the image" << std::endl ;
+        return -1;
+    }
     
+    namedWindow( "Testing image", WINDOW_AUTOSIZE );// Create a window for display.
+    imshow( "Testing image", image );                   // Show our image inside it.
+    
+    connected_component(row, col);
+    show_connected(row, col);
+    int howmany_test = find_howmany(row, col);
+    cout << "the number of shapes:  " << shape_container.size() << endl << endl;
+    
+    calculate_compactness();
+    
+    linear_discriminant(centers);
+    show_cluster();
 
     waitKey(0);                                          // Wait for a keystroke in the window
-	
+    
     return 0;
 }
 
-// profile
-void get_profile(){
-    ofstream horizontal;
-    ofstream vertical;
-    horizontal.open("horizontal.txt");
-    vertical.open("vertical.txt");
+// show image with clusters
+void show_cluster(){
 
+    Mat cluster_image(image.rows, image.cols, image.type());
+//    cout << image.rows << " " << image.cols << endl;
     for(int i = 0; i < shape_container.size(); i++){
-        Mat temp_image = shape_container.at(i).object;
-        int row = temp_image.rows;
-        int col = temp_image.cols;
-        int horizontal_profile[col];    // pixel points for each column
-        int vertical_profile[row];      // pixel points for each row
-        for(int j = 0; j < row; j++){
-            vertical_profile[j] = 0;
-        }
-        for(int j = 0; j < col; j++){
-            horizontal_profile[j] = 0;
-        }
-        for(int j = 0; j < row; j++){
-            for(int k = 0; k < col; k++){
-                if(temp_image.at<Vec3b>(j,k)[0] != 0){
-                   vertical_profile[j]++;
+        Mat temp_shape = shape_container.at(i).object;
+//        namedWindow("what", WINDOW_NORMAL);
+//        imshow("what", temp_shape);
+//        waitKey(0);
+        if(shape_container.at(i).cluster == 0){
+            for(int j = 0; j < temp_shape.rows; j++){
+                for(int k = 0; k < temp_shape.cols; k++){
+                    if(temp_shape.at<Vec3b>(j,k)[0] != 0){
+                        temp_shape.at<Vec3b>(j,k)[0] = 255;
+                        temp_shape.at<Vec3b>(j,k)[1] = 1;
+                        temp_shape.at<Vec3b>(j,k)[2] = 1;
+                    }
                 }
             }
-            vertical << vertical_profile[j] << " ";
         }
-        vertical << "\n\n";
-        for(int j = 0; j < col; j++){
-            for(int k = 0; k < row; k++){
-                if(temp_image.at<Vec3b>(j,k)[0] != 0){
-                   horizontal_profile[j]++;
+        else if(shape_container.at(i).cluster == 1){
+            for(int j = 0; j < temp_shape.rows; j++){
+                for(int k = 0; k < temp_shape.cols; k++){
+                    if(temp_shape.at<Vec3b>(j,k)[0] != 0){
+                        temp_shape.at<Vec3b>(j,k)[0] = 1;
+                        temp_shape.at<Vec3b>(j,k)[1] = 255;
+                        temp_shape.at<Vec3b>(j,k)[2] = 1;
+                    }
                 }
             }
-            horizontal << horizontal_profile[j] << " ";
         }
-        horizontal << "\n\n";
+        else if(shape_container.at(i).cluster == 2){
+            for(int j = 0; j < temp_shape.rows; j++){
+                for(int k = 0; k < temp_shape.cols; k++){
+                    if(temp_shape.at<Vec3b>(j,k)[0] != 0){
+                        temp_shape.at<Vec3b>(j,k)[0] = 1;
+                        temp_shape.at<Vec3b>(j,k)[1] = 1;
+                        temp_shape.at<Vec3b>(j,k)[2] = 255;
+                    }
+                }
+            }
+        }
+        else if(shape_container.at(i).cluster == 3){
+            for(int j = 0; j < temp_shape.rows; j++){
+                for(int k = 0; k < temp_shape.cols; k++){
+                    if(temp_shape.at<Vec3b>(j,k)[0] != 0){
+                        temp_shape.at<Vec3b>(j,k)[0] = 255;
+                        temp_shape.at<Vec3b>(j,k)[1] = 255;
+                        temp_shape.at<Vec3b>(j,k)[2] = 1;
+                    }
+                }
+            }
+        }
+        else if(shape_container.at(i).cluster == 4){
+            for(int j = 0; j < temp_shape.rows; j++){
+                for(int k = 0; k < temp_shape.cols; k++){
+                    if(temp_shape.at<Vec3b>(j,k)[0] != 0){
+                        temp_shape.at<Vec3b>(j,k)[0] = 255;
+                        temp_shape.at<Vec3b>(j,k)[1] = 1;
+                        temp_shape.at<Vec3b>(j,k)[2] = 255;
+                    }
+                }
+            }
+        }
+        int xmin = shape_container.at(i).xmin;
+        int xmax = shape_container.at(i).xmax;
+        int ymin = shape_container.at(i).ymin;
+        int ymax = shape_container.at(i).ymax;
+//        cout << xmin << " " << xmax << " " << ymin << " " << ymax << endl;
+        Rect roi(Point(xmin,ymin),Size(xmax-xmin+1,ymax-ymin+1));
+        Mat destinationROI = cluster_image(roi);
+        temp_shape.copyTo(cluster_image(roi));
     }
-    horizontal.close();
-    vertical.close();
+    namedWindow("cluster image", WINDOW_AUTOSIZE);
+    imshow("cluster image", cluster_image);
+    waitKey(0);
 }
+
+// run linear discriminant
+void linear_discriminant(Mat centers){
+    for(int i = 0; i < shape_container.size(); i++){
+        double temp_compactness = shape_container.at(i).compactness;
+        double temp_ratio = shape_container.at(i).fb_ratio;
+        cout << "compactness:  " << temp_compactness << "  fb_ratio:  " << temp_ratio << endl;
+        int max_index = -1;
+        double max_value = -100;
+        double g1 = (temp_compactness*centers.at<float>(0,0)+temp_ratio*centers.at<float>(0,1))-0.5*(pow(centers.at<float>(0,0),2)+pow(centers.at<float>(0,1),2));
+        double g2 = (temp_compactness*centers.at<float>(1,0)+temp_ratio*centers.at<float>(1,1))-0.5*(pow(centers.at<float>(1,0),2)+pow(centers.at<float>(1,1),2));
+        if(g1 >= g2){
+            max_index = 0;
+            max_value = g1;
+        }
+        else{
+            max_index = 1;
+            max_value = g2;
+        }
+        double g3 = (temp_compactness*centers.at<float>(2,0)+temp_ratio*centers.at<float>(2,1))-0.5*(pow(centers.at<float>(2,0),2)+pow(centers.at<float>(2,1),2));
+        if(g3 >= max_value){
+            max_index = 2;
+            max_value = g3;
+        }
+        double g4 = (temp_compactness*centers.at<float>(3,0)+temp_ratio*centers.at<float>(3,1))-0.5*(pow(centers.at<float>(3,0),2)+pow(centers.at<float>(3,1),2));
+        if(g4 >= max_value){
+            max_index = 3;
+            max_value = g4;
+        }
+        double g5 = (temp_compactness*centers.at<float>(4,0)+temp_ratio*centers.at<float>(4,1))-0.5*(pow(centers.at<float>(4,0),2)+pow(centers.at<float>(4,1),2));
+        if(g5 >= max_value){
+            max_index = 4;
+            max_value = g5;
+        }
+        shape_container.at(i).cluster = max_index;
+        cout << "g12345:  " << g1 << "  " << g2 << "  " << g3 << "  " << g4 << "  " << g5 << endl;
+        cout << i << " shape belongs to " << max_index << " cluster" << endl << endl;
+    }
+}
+
+//// profile
+//void get_profile(){
+//    ofstream horizontal;
+//    ofstream vertical;
+//    horizontal.open("horizontal.txt");
+//    vertical.open("vertical.txt");
+//
+//    for(int i = 0; i < shape_container.size(); i++){
+//        Mat temp_image = shape_container.at(i).object;
+//        int row = temp_image.rows;
+//        int col = temp_image.cols;
+//        int horizontal_profile[col];    // pixel points for each column
+//        int vertical_profile[row];      // pixel points for each row
+//        for(int j = 0; j < row; j++){
+//            vertical_profile[j] = 0;
+//        }
+//        for(int j = 0; j < col; j++){
+//            horizontal_profile[j] = 0;
+//        }
+//        for(int j = 0; j < row; j++){
+//            for(int k = 0; k < col; k++){
+//                if(temp_image.at<Vec3b>(j,k)[0] != 0){
+//                   vertical_profile[j]++;
+//                }
+//            }
+//            vertical << vertical_profile[j] << " ";
+//        }
+//        vertical << "\n\n";
+//        for(int j = 0; j < col; j++){
+//            for(int k = 0; k < row; k++){
+//                if(temp_image.at<Vec3b>(j,k)[0] != 0){
+//                   horizontal_profile[j]++;
+//                }
+//            }
+//            horizontal << horizontal_profile[j] << " ";
+//        }
+//        horizontal << "\n\n";
+//    }
+//    horizontal.close();
+//    vertical.close();
+//}
 
 // calculate compactness
 void calculate_compactness(){
@@ -174,7 +324,7 @@ void calculate_compactness(){
             compactness = 100;
         }
         shape_container.at(i).compactness = compactness;
-        double fb_ratio = (double)num_back/(double)shape_container.at(i).area * 100;
+        double fb_ratio = (double)num_back/(double)shape_container.at(i).area * 100;    // *100 put more weight fb_ratio
         if(fb_ratio > 200){
             fb_ratio = 200;
         }
@@ -190,6 +340,7 @@ void calculate_compactness(){
 
 // find how many different shapes are in the image
 int find_howmany(int row, int col){
+    shape_container.clear();
     set<int> myset;
     for(int i = 0; i < row; i++){
         for(int j = 0; j < col; j++){
@@ -250,6 +401,10 @@ int find_howmany(int row, int col){
         new_shape.object = object.clone();
         new_shape.label = *it;
         new_shape.area = count;
+        new_shape.xmin = xmin;
+        new_shape.xmax = xmax;
+        new_shape.ymin = ymin;
+        new_shape.ymax = ymax;
         shape_container.push_back(new_shape);
 //        namedWindow("object",WINDOW_NORMAL);
 //        imshow("object",object);
@@ -284,8 +439,8 @@ Mat show_connected(int row, int col){
         }
     }
     
-    namedWindow( "connected", WINDOW_AUTOSIZE );
-    imshow( "connected", check );
+//    namedWindow( "connected", WINDOW_AUTOSIZE );
+//    imshow( "connected", check );
     return check;
 }
 
