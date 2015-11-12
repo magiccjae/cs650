@@ -1,1 +1,2 @@
-/home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles/pattern.dir
+/home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles/complex.dir
+/home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles/simple.dir

@@ -99,41 +99,78 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named pattern
+# Target rules for targets named complex
 
 # Build rule for target.
-pattern: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 pattern
-.PHONY : pattern
+complex: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 complex
+.PHONY : complex
 
 # fast build rule for target.
-pattern/fast:
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/build
-.PHONY : pattern/fast
+complex/fast:
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/build
+.PHONY : complex/fast
 
-main.o: main.cpp.o
-.PHONY : main.o
+#=============================================================================
+# Target rules for targets named simple
+
+# Build rule for target.
+simple: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 simple
+.PHONY : simple
+
+# fast build rule for target.
+simple/fast:
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/build
+.PHONY : simple/fast
+
+complex.o: complex.cpp.o
+.PHONY : complex.o
 
 # target to build an object file
-main.cpp.o:
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/main.cpp.o
-.PHONY : main.cpp.o
+complex.cpp.o:
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/complex.cpp.o
+.PHONY : complex.cpp.o
 
-main.i: main.cpp.i
-.PHONY : main.i
+complex.i: complex.cpp.i
+.PHONY : complex.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/main.cpp.i
-.PHONY : main.cpp.i
+complex.cpp.i:
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/complex.cpp.i
+.PHONY : complex.cpp.i
 
-main.s: main.cpp.s
-.PHONY : main.s
+complex.s: complex.cpp.s
+.PHONY : complex.s
 
 # target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/main.cpp.s
-.PHONY : main.cpp.s
+complex.cpp.s:
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/complex.cpp.s
+.PHONY : complex.cpp.s
+
+simple.o: simple.cpp.o
+.PHONY : simple.o
+
+# target to build an object file
+simple.cpp.o:
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/simple.cpp.o
+.PHONY : simple.cpp.o
+
+simple.i: simple.cpp.i
+.PHONY : simple.i
+
+# target to preprocess a source file
+simple.cpp.i:
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/simple.cpp.i
+.PHONY : simple.cpp.i
+
+simple.s: simple.cpp.s
+.PHONY : simple.s
+
+# target to generate assembly for a file
+simple.cpp.s:
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/simple.cpp.s
+.PHONY : simple.cpp.s
 
 # Help Target
 help:
@@ -141,12 +178,16 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... complex"
 	@echo "... edit_cache"
-	@echo "... pattern"
 	@echo "... rebuild_cache"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
+	@echo "... simple"
+	@echo "... complex.o"
+	@echo "... complex.i"
+	@echo "... complex.s"
+	@echo "... simple.o"
+	@echo "... simple.i"
+	@echo "... simple.s"
 .PHONY : help
 
 

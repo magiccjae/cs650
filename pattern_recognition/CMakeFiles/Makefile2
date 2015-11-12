@@ -53,38 +53,73 @@ CMAKE_SOURCE_DIR = /home/magiccjae/src/github/cs650/pattern_recognition
 CMAKE_BINARY_DIR = /home/magiccjae/src/github/cs650/pattern_recognition
 
 #=============================================================================
-# Target rules for target CMakeFiles/pattern.dir
+# Target rules for target CMakeFiles/complex.dir
 
 # All Build rule for target.
-CMakeFiles/pattern.dir/all:
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/depend
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/build
+CMakeFiles/complex.dir/all:
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/depend
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/build
 	$(CMAKE_COMMAND) -E cmake_progress_report /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles  1
-	@echo "Built target pattern"
-.PHONY : CMakeFiles/pattern.dir/all
+	@echo "Built target complex"
+.PHONY : CMakeFiles/complex.dir/all
 
 # Include target in all.
-all: CMakeFiles/pattern.dir/all
+all: CMakeFiles/complex.dir/all
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/pattern.dir/rule: cmake_check_build_system
+CMakeFiles/complex.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles 1
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/pattern.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/complex.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles 0
-.PHONY : CMakeFiles/pattern.dir/rule
+.PHONY : CMakeFiles/complex.dir/rule
 
 # Convenience name for target.
-pattern: CMakeFiles/pattern.dir/rule
-.PHONY : pattern
+complex: CMakeFiles/complex.dir/rule
+.PHONY : complex
 
 # clean rule for target.
-CMakeFiles/pattern.dir/clean:
-	$(MAKE) -f CMakeFiles/pattern.dir/build.make CMakeFiles/pattern.dir/clean
-.PHONY : CMakeFiles/pattern.dir/clean
+CMakeFiles/complex.dir/clean:
+	$(MAKE) -f CMakeFiles/complex.dir/build.make CMakeFiles/complex.dir/clean
+.PHONY : CMakeFiles/complex.dir/clean
 
 # clean rule for target.
-clean: CMakeFiles/pattern.dir/clean
+clean: CMakeFiles/complex.dir/clean
+.PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/simple.dir
+
+# All Build rule for target.
+CMakeFiles/simple.dir/all:
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/depend
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/build
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles  2
+	@echo "Built target simple"
+.PHONY : CMakeFiles/simple.dir/all
+
+# Include target in all.
+all: CMakeFiles/simple.dir/all
+.PHONY : all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/simple.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/simple.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles 0
+.PHONY : CMakeFiles/simple.dir/rule
+
+# Convenience name for target.
+simple: CMakeFiles/simple.dir/rule
+.PHONY : simple
+
+# clean rule for target.
+CMakeFiles/simple.dir/clean:
+	$(MAKE) -f CMakeFiles/simple.dir/build.make CMakeFiles/simple.dir/clean
+.PHONY : CMakeFiles/simple.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/simple.dir/clean
 .PHONY : clean
 
 #=============================================================================

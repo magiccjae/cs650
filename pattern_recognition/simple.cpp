@@ -40,11 +40,13 @@ Mat show_connected(int row, int col);
 void calculate_compactness();
 void get_profile();
 void linear_discriminant(Mat centers);
-void show_cluster();
+Mat show_cluster();
 
 int main(){
 	
-    image = imread("train1.pgm");   // shapes.pgm  train1.pgm  train2.pgm
+//====== TRANING PART
+
+    image = imread("shapes.pgm");   // shapes.pgm  train1.pgm  train2.pgm
     if(! image.data ){                              // Check for invalid input
         cout <<  "Could not open or find the image" << std::endl ;
         return -1;
@@ -73,6 +75,8 @@ int main(){
     connected_component(row, col);
     
     Mat check = show_connected(row, col);
+    namedWindow("Training connected", WINDOW_AUTOSIZE);
+    imshow("Training connected", check);
 
     int howmany = find_howmany(row, col);
     cout << "the number of shapes:  " << shape_container.size() << endl;
@@ -108,9 +112,13 @@ int main(){
 //       cout << shape_container.at(i).cluster << endl;
     }
 
-    show_cluster();
+    Mat cluster1 = show_cluster();
+    namedWindow("Training cluster",WINDOW_AUTOSIZE);
+    imshow("Training cluster",cluster1);
 
-    image = imread("match1.pgm");       // testshapes.pgm  match1.pgm   match2.pgm
+//====== TEST CLASSIFICATION PART
+
+    image = imread("testshapes.pgm");       // testshapes.pgm  match1.pgm   match2.pgm
     if(! image.data ){                              // Check for invalid input
         cout <<  "Could not open or find the image" << std::endl ;
         return -1;
@@ -120,14 +128,20 @@ int main(){
     imshow( "Testing image", image );                   // Show our image inside it.
     
     connected_component(row, col);
-    show_connected(row, col);
+
+    Mat check2 = show_connected(row, col);
+    namedWindow("Testing connected", WINDOW_AUTOSIZE);
+    imshow("Testing connected", check2);
+
     int howmany_test = find_howmany(row, col);
     cout << "the number of shapes:  " << shape_container.size() << endl << endl;
     
     calculate_compactness();
     
     linear_discriminant(centers);
-    show_cluster();
+    Mat cluster2 = show_cluster();
+    namedWindow("Testing cluster",WINDOW_AUTOSIZE);
+    imshow("Testing cluster",cluster2);
 
     waitKey(0);                                          // Wait for a keystroke in the window
     
@@ -135,7 +149,7 @@ int main(){
 }
 
 // show image with clusters
-void show_cluster(){
+Mat show_cluster(){
 
     Mat cluster_image(image.rows, image.cols, image.type());
 //    cout << image.rows << " " << image.cols << endl;
@@ -208,9 +222,10 @@ void show_cluster(){
         Mat destinationROI = cluster_image(roi);
         temp_shape.copyTo(cluster_image(roi));
     }
-    namedWindow("cluster image", WINDOW_AUTOSIZE);
-    imshow("cluster image", cluster_image);
-    waitKey(0);
+//    namedWindow("cluster image", WINDOW_AUTOSIZE);
+//    imshow("cluster image", cluster_image);
+//    waitKey(0);
+    return cluster_image;
 }
 
 // run linear discriminant
