@@ -35,10 +35,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/magiccjae/src/github/cs650/pattern_recognition
+CMAKE_SOURCE_DIR = /home/jae/src/github/cs650/pattern_recognition
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/magiccjae/src/github/cs650/pattern_recognition
+CMAKE_BINARY_DIR = /home/jae/src/github/cs650/pattern_recognition
 
 # Include any dependencies generated for this target.
 include CMakeFiles/simple.dir/depend.make
@@ -51,17 +51,17 @@ include CMakeFiles/simple.dir/flags.make
 
 CMakeFiles/simple.dir/simple.cpp.o: CMakeFiles/simple.dir/flags.make
 CMakeFiles/simple.dir/simple.cpp.o: simple.cpp
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles $(CMAKE_PROGRESS_1)
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/jae/src/github/cs650/pattern_recognition/CMakeFiles $(CMAKE_PROGRESS_1)
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/simple.dir/simple.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/simple.dir/simple.cpp.o -c /home/magiccjae/src/github/cs650/pattern_recognition/simple.cpp
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/simple.dir/simple.cpp.o -c /home/jae/src/github/cs650/pattern_recognition/simple.cpp
 
 CMakeFiles/simple.dir/simple.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/simple.dir/simple.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/magiccjae/src/github/cs650/pattern_recognition/simple.cpp > CMakeFiles/simple.dir/simple.cpp.i
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/jae/src/github/cs650/pattern_recognition/simple.cpp > CMakeFiles/simple.dir/simple.cpp.i
 
 CMakeFiles/simple.dir/simple.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/simple.dir/simple.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/magiccjae/src/github/cs650/pattern_recognition/simple.cpp -o CMakeFiles/simple.dir/simple.cpp.s
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/jae/src/github/cs650/pattern_recognition/simple.cpp -o CMakeFiles/simple.dir/simple.cpp.s
 
 CMakeFiles/simple.dir/simple.cpp.o.requires:
 .PHONY : CMakeFiles/simple.dir/simple.cpp.o.requires
@@ -136,6 +136,6 @@ CMakeFiles/simple.dir/clean:
 .PHONY : CMakeFiles/simple.dir/clean
 
 CMakeFiles/simple.dir/depend:
-	cd /home/magiccjae/src/github/cs650/pattern_recognition && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/magiccjae/src/github/cs650/pattern_recognition /home/magiccjae/src/github/cs650/pattern_recognition /home/magiccjae/src/github/cs650/pattern_recognition /home/magiccjae/src/github/cs650/pattern_recognition /home/magiccjae/src/github/cs650/pattern_recognition/CMakeFiles/simple.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jae/src/github/cs650/pattern_recognition && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jae/src/github/cs650/pattern_recognition /home/jae/src/github/cs650/pattern_recognition /home/jae/src/github/cs650/pattern_recognition /home/jae/src/github/cs650/pattern_recognition /home/jae/src/github/cs650/pattern_recognition/CMakeFiles/simple.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/simple.dir/depend
 

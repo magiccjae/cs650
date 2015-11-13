@@ -83,15 +83,15 @@ int main(){
     calculate_compactness();
 //    get_profile();
 
-//    for(int i = 0; i < shape_container.size(); i++){
-//        Feature temp = shape_container.at(i);
-//        namedWindow("object",WINDOW_NORMAL);
-//        imshow("object",temp.object);
-//        cout << "label:  " << temp.label << "  area:  " << temp.area << endl;
-//        cout << "perimeter:  " << temp.perimeter << "  compactness:  " << temp.compactness << endl;
-//        cout << "fb_ratio:  " << temp.fb_ratio << endl;
-//        waitKey(0);
-//    }
+    for(int i = 0; i < shape_container.size(); i++){
+        Feature temp = shape_container.at(i);
+        namedWindow("object",WINDOW_NORMAL);
+        imshow("object",temp.object);
+        cout << "label:  " << temp.label << "  area:  " << temp.area << endl;
+        cout << "perimeter:  " << temp.perimeter << "  compactness:  " << temp.compactness << endl;
+        cout << "fb_ratio:  " << temp.fb_ratio << endl;
+        waitKey(0);
+    }
     int num_feature = 2;
     Mat input_samples(shape_container.size(), num_feature, CV_32F);
     for(int i = 0; i < shape_container.size(); i++){

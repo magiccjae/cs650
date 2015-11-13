@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/magiccjae/src/github/cs650/pattern_recognition/complex.cpp
+/home/jae/src/github/cs650/pattern_recognition/complex.cpp
 opencv2/core/core.hpp
 -
 opencv2/highgui/highgui.hpp

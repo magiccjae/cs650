@@ -86,21 +86,22 @@ int main(){
     count_zerocrossing();
 //    get_profile();
 
-    for(int i = 0; i < shape_container.size(); i++){
-        Feature temp = shape_container.at(i);
-        namedWindow("object",WINDOW_NORMAL);
-        imshow("object",temp.object);
-        cout << "label:  " << temp.label << "  area:  " << temp.area << endl;
-        cout << "perimeter:  " << temp.perimeter << "  compactness:  " << temp.compactness << endl;
-        cout << "fb_ratio:  " << temp.fb_ratio << endl;
-        cout << "max_crossing:  " << temp.max_crossing << endl;
-        waitKey(0);
-    }
-    int num_feature = 2;
+//    for(int i = 0; i < shape_container.size(); i++){
+//        Feature temp = shape_container.at(i);
+//        namedWindow("object",WINDOW_NORMAL);
+//        imshow("object",temp.object);
+////        cout << "perimeter:  " << temp.perimeter << "  area:  " << temp.area << endl;
+//        cout << "label:  " << temp.label << "  compactness:  " << temp.compactness << endl;
+//        cout << "fb_ratio:  " << temp.fb_ratio << endl;
+//        cout << "max_crossing:  " << temp.max_crossing << endl;
+//        waitKey(0);
+//    }
+    int num_feature = 3;
     Mat input_samples(shape_container.size(), num_feature, CV_32F);
     for(int i = 0; i < shape_container.size(); i++){
         input_samples.at<float>(i,0) = shape_container.at(i).compactness;
         input_samples.at<float>(i,1) = shape_container.at(i).fb_ratio;
+        input_samples.at<float>(i,2) = shape_container.at(i).max_crossing;
     }
     Mat result_clusters;
     int num_clusters = 5;
@@ -122,30 +123,30 @@ int main(){
 
 //====== TEST CLASSIFICATION PART
 
-//    image = imread("match1.pgm");       // testshapes.pgm  match1.pgm   match2.pgm
-//    if(! image.data ){                              // Check for invalid input
-//        cout <<  "Could not open or find the image" << std::endl ;
-//        return -1;
-//    }
-//    
-//    namedWindow( "Testing image", WINDOW_AUTOSIZE );// Create a window for display.
-//    imshow( "Testing image", image );                   // Show our image inside it.
-//    
-//    connected_component(row, col);
-//
-//    Mat check2 = show_connected(row, col);
-//    namedWindow("Testing connected", WINDOW_AUTOSIZE);
-//    imshow("Testing connected", check2);
-//
-//    int howmany_test = find_howmany(row, col);
-//    cout << "the number of shapes:  " << shape_container.size() << endl << endl;
-//    
-//    calculate_compactness();
-//    
-//    linear_discriminant(centers);
-//    Mat cluster2 = show_cluster();
-//    namedWindow("Testing cluster",WINDOW_AUTOSIZE);
-//    imshow("Testing cluster",cluster2);
+    image = imread("match1.pgm");       // testshapes.pgm  match1.pgm   match2.pgm
+    if(! image.data ){                              // Check for invalid input
+        cout <<  "Could not open or find the image" << std::endl ;
+        return -1;
+    }
+    
+    namedWindow( "Testing image", WINDOW_AUTOSIZE );// Create a window for display.
+    imshow( "Testing image", image );                   // Show our image inside it.
+    
+    connected_component(row, col);
+
+    Mat check2 = show_connected(row, col);
+    namedWindow("Testing connected", WINDOW_AUTOSIZE);
+    imshow("Testing connected", check2);
+
+    int howmany_test = find_howmany(row, col);
+    cout << "the number of shapes:  " << shape_container.size() << endl << endl;
+    
+    calculate_compactness();
+    
+    linear_discriminant(centers);
+    Mat cluster2 = show_cluster();
+    namedWindow("Testing cluster",WINDOW_AUTOSIZE);
+    imshow("Testing cluster",cluster2);
 
     waitKey(0);                                          // Wait for a keystroke in the window
     
@@ -237,11 +238,12 @@ void linear_discriminant(Mat centers){
     for(int i = 0; i < shape_container.size(); i++){
         double temp_compactness = shape_container.at(i).compactness;
         double temp_ratio = shape_container.at(i).fb_ratio;
-        cout << "compactness:  " << temp_compactness << "  fb_ratio:  " << temp_ratio << endl;
+        double temp_crossing = shape_container.at(i).max_crossing;
+        cout << "compactness:  " << temp_compactness << "  fb_ratio:  " << temp_ratio << "  max_crossing:  " << temp_crossing << endl;
         int max_index = -1;
         double max_value = -100;
-        double g1 = (temp_compactness*centers.at<float>(0,0)+temp_ratio*centers.at<float>(0,1))-0.5*(pow(centers.at<float>(0,0),2)+pow(centers.at<float>(0,1),2));
-        double g2 = (temp_compactness*centers.at<float>(1,0)+temp_ratio*centers.at<float>(1,1))-0.5*(pow(centers.at<float>(1,0),2)+pow(centers.at<float>(1,1),2));
+        double g1 = (temp_compactness*centers.at<float>(0,0)+temp_ratio*centers.at<float>(0,1)+temp_crossing*centers.at<float>(0,2))-0.5*(pow(centers.at<float>(0,0),2)+pow(centers.at<float>(0,1),2)+pow(centers.at<float>(0,2),2));
+        double g2 = (temp_compactness*centers.at<float>(1,0)+temp_ratio*centers.at<float>(1,1)+temp_crossing*centers.at<float>(1,2))-0.5*(pow(centers.at<float>(1,0),2)+pow(centers.at<float>(1,1),2)+pow(centers.at<float>(1,2),2));
         if(g1 >= g2){
             max_index = 0;
             max_value = g1;
@@ -250,17 +252,17 @@ void linear_discriminant(Mat centers){
             max_index = 1;
             max_value = g2;
         }
-        double g3 = (temp_compactness*centers.at<float>(2,0)+temp_ratio*centers.at<float>(2,1))-0.5*(pow(centers.at<float>(2,0),2)+pow(centers.at<float>(2,1),2));
+        double g3 = (temp_compactness*centers.at<float>(2,0)+temp_ratio*centers.at<float>(2,1)+temp_crossing*centers.at<float>(2,2))-0.5*(pow(centers.at<float>(2,0),2)+pow(centers.at<float>(2,1),2)+pow(centers.at<float>(2,2),2));
         if(g3 >= max_value){
             max_index = 2;
             max_value = g3;
         }
-        double g4 = (temp_compactness*centers.at<float>(3,0)+temp_ratio*centers.at<float>(3,1))-0.5*(pow(centers.at<float>(3,0),2)+pow(centers.at<float>(3,1),2));
+        double g4 = (temp_compactness*centers.at<float>(3,0)+temp_ratio*centers.at<float>(3,1)+temp_crossing*centers.at<float>(3,2))-0.5*(pow(centers.at<float>(3,0),2)+pow(centers.at<float>(3,1),2)+pow(centers.at<float>(3,2),2));
         if(g4 >= max_value){
             max_index = 3;
             max_value = g4;
         }
-        double g5 = (temp_compactness*centers.at<float>(4,0)+temp_ratio*centers.at<float>(4,1))-0.5*(pow(centers.at<float>(4,0),2)+pow(centers.at<float>(4,1),2));
+        double g5 = (temp_compactness*centers.at<float>(4,0)+temp_ratio*centers.at<float>(4,1)+temp_crossing*centers.at<float>(4,2))-0.5*(pow(centers.at<float>(4,0),2)+pow(centers.at<float>(4,1),2)+pow(centers.at<float>(4,2),2));
         if(g5 >= max_value){
             max_index = 4;
             max_value = g5;
@@ -307,7 +309,7 @@ void count_zerocrossing(){
         }
 //        cout << i << " th " << v_crossing << " " << h_crossing << endl;
         int max_crossing = max(v_crossing, h_crossing);
-        shape_container.at(i).max_crossing = max_crossing;
+        shape_container.at(i).max_crossing = max_crossing * 5;
     }
 }
 
@@ -341,9 +343,9 @@ void calculate_compactness(){
             compactness = 45;
         }
         shape_container.at(i).compactness = compactness;
-        double fb_ratio = (double)num_back/(double)shape_container.at(i).area * 10;    // *100 put more weight fb_ratio
-        if(fb_ratio > 200){
-            fb_ratio = 200;
+        double fb_ratio = (double)num_back/(double)shape_container.at(i).area * 10;    // *10 put more weight fb_ratio
+        if(fb_ratio > 15){
+            fb_ratio = 15;
         }
         shape_container.at(i).fb_ratio = fb_ratio;
 //        cout << "perimeter:  " << perimeter << endl;
