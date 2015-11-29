@@ -1,0 +1,49 @@
+import numpy as np
+    2 import cv2
+    3 
+    4 cap = cv2.VideoCapture('slow.flv')
+    5 
+    6 # take first frame of the video
+    7 ret,frame = cap.read()
+    8 
+    9 # setup initial location of window
+   10 r,h,c,w = 250,90,400,125  # simply hardcoded the values
+   11 track_window = (c,r,w,h)
+   12 
+   13 # set up the ROI for tracking
+   14 roi = frame[r:r+h, c:c+w]
+   15 hsv_roi =  cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+   16 mask = cv2.inRange(hsv_roi, np.array((0., 60.,32.)), np.array((180.,255.,255.)))
+   17 roi_hist = cv2.calcHist([hsv_roi],[0],mask,[180],[0,180])
+   18 cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
+   19 
+   20 # Setup the termination criteria, either 10 iteration or move by atleast 1 pt
+   21 term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
+   22 
+   23 while(1):
+   24     ret ,frame = cap.read()
+   25 
+   26     if ret == True:
+   27         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+   28         dst = cv2.calcBackProject([hsv],[0],roi_hist,[0,180],1)
+   29 
+   30         # apply meanshift to get the new location
+   31         ret, track_window = cv2.meanShift(dst, track_window, term_crit)
+   32 
+   33         # Draw it on image
+   34         x,y,w,h = track_window
+   35         img2 = cv2.rectangle(frame, (x,y), (x+w,y+h), 255,2)
+   36         cv2.imshow('img2',img2)
+   37 
+   38         k = cv2.waitKey(60) & 0xff
+   39         if k == 27:
+   40             break
+   41         else:
+   42             cv2.imwrite(chr(k)+".jpg",img2)
+   43 
+   44     else:
+   45         break
+   46 
+   47 cv2.destroyAllWindows()
+   48 cap.release()
+

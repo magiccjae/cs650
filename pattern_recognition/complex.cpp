@@ -309,7 +309,7 @@ void count_zerocrossing(){
         }
 //        cout << i << " th " << v_crossing << " " << h_crossing << endl;
         int max_crossing = max(v_crossing, h_crossing);
-        shape_container.at(i).max_crossing = max_crossing * 5;
+        shape_container.at(i).max_crossing = max_crossing * 10;
     }
 }
 
