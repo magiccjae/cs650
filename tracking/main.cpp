@@ -33,7 +33,7 @@ bool setup = false;
 
 // function prototype
 void mouseHandler(int event, int x, int y, int flags, void* param);
-
+void getHistogram(Mat roi);
 
 int main(int argc, char** argv)
 {
@@ -47,26 +47,38 @@ int main(int argc, char** argv)
     
     namedWindow(src_window,CV_WINDOW_AUTOSIZE);
     setMouseCallback(src_window,mouseHandler,0);
+    createTrackbar("bins: ", src_window, &hist_size, 255, 0);
     
     for(;;){
         cap >> frame;
 //    frame = imread("car.jpg");
 //        split(frame, bgr_planes);
-        if(setup){
-            calcBackProject(&frame, 1, channels, m_model3d, m_backproj, ranges);
-            int itrs = meanShift(m_backproj, rect_roi, TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 100, 0.01));
-            rectangle(frame, rect_roi, Scalar(0, 0, 255), 3, CV_AA);
-        }
+//        if(setup){
+//            calcBackProject(&frame, 1, channels, m_model3d, m_backproj, ranges);
+//            int itrs = meanShift(m_backproj, rect_roi, TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 100, 0.01));
+//            rectangle(frame, rect_roi, Scalar(0, 0, 255), 3, CV_AA);
+//        }
 
         imshow(src_window,frame);
-//        waitKey(0);
-        if(waitKey(30) == 27){
+
+        if(waitKey(0) == 27){
             cout <<"esc key is pressed by user" << endl;
             break;
         }
     }
 
     return 0;
+}
+
+void getHistogram(Mat roi){
+        // Compute the histograms:
+        calcHist( &roi, 1, channels, Mat(), m_model3d, 3, hist_sizes, ranges);
+
+        normalize(m_model3d, m_model3d, 0, 255, NORM_MINMAX, -1, Mat());
+        MatND backproj;
+        calcBackProject(&frame, 1, channels, m_model3d, backproj, ranges, 1, true);
+        imshow("BackProj",backproj);
+
 }
 
 void mouseHandler(int event, int x, int y, int flags, void* param)
@@ -106,9 +118,7 @@ void mouseHandler(int event, int x, int y, int flags, void* param)
 
         namedWindow("roi",WINDOW_NORMAL);
         imshow("roi",roi);        
-
-        /// Compute the histograms:
-        calcHist( &roi, 1, channels, Mat(), m_model3d, 3, hist_sizes, ranges);
+        getHistogram(roi);
         setup = true;
     }
 }
