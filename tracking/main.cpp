@@ -36,7 +36,7 @@ void getHistogram(Mat roi);
 
 int main(int argc, char** argv)
 {
-    VideoCapture cap("byu.mp4");
+    VideoCapture cap("messi.mp4");
 
     if( !cap.isOpened() )
     {
@@ -55,8 +55,10 @@ int main(int argc, char** argv)
             MatND backproj;
             calcBackProject(&hsv, 1, channels, hist, backproj, ranges, 1, true);
             imshow("BackProj", backproj);
-            int itrs = meanShift(backproj, rect_roi, TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 10, 1));
-            rectangle(frame, rect_roi, Scalar(0,0,255), 2, CV_AA);
+            int max_iteration = 30;
+            double desired_accuracy = 0.1;
+            int itrs = meanShift(backproj, rect_roi, TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, max_iteration, desired_accuracy));
+            rectangle(frame, rect_roi, Scalar(255,0,0), 2, CV_AA);
 
         }
         imshow(src_window,frame);
@@ -72,8 +74,8 @@ int main(int argc, char** argv)
 
 void getHistogram(Mat roi){
     int ch[] = {0, 0};
-    int h_bins = 30;
-    int s_bins = 32;
+    int h_bins = 100;    // initial 30
+    int s_bins = 100;    // initial 32
     int histSize[] = {h_bins,s_bins};
     
     calcHist(&roi, 1, channels, Mat(), hist, 2, histSize, ranges, true, false);

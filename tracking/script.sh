@@ -1,2 +1,2 @@
 #!/bin/sh
-g++ camshift.cpp $(pkg-config opencv --cflags --libs) 
+g++ main2.cpp $(pkg-config opencv --cflags --libs) 
