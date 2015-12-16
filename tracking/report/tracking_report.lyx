@@ -1,0 +1,1384 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Mean-Shift Tracking
+\end_layout
+
+\begin_layout Author
+Jae Lee
+\end_layout
+
+\begin_layout Abstract
+Object tracking using mean shift algorithm is presented in this paper.
+ The implementation presented here uses only color histogram of the object
+ to be tracked.
+ Then, mean shift algorithm is applied to conduct similarity search using
+ the backprojection image of the object's color histogram.
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+Object tracking is an interesting topic that has been attracting many researcher
+s in the field of computer vision.
+ It has a variety of applications such as human-computer interaction, surveillan
+ce, augmented reality, and traffic control etc.
+ The goal of object tracking is to detect the object of interest and find
+ its location continuously and robustly in a sequence of images that is
+ either recorded or displayed in real-time.
+ As one of the applications of object tracking, researchers in MAGICC lab
+ directed by Dr.
+ Randy Beard has been developing an algorithm called Recursive RANSAC to
+ track multiple-objects simultaneously which is mainly intended to be used
+ on unmanned aerial vehicle(UAV) platform.
+ 
+\end_layout
+
+\begin_layout Standard
+The basic idea of R-RANSAC algorithm is first to identify any moving objects
+ in a video sequence and store the trajectories of these objects.
+ Second, it keeps managing a list of tracks using R-RANSAC algorithm.
+ For example, if a track has existed for sometime above threshold and has
+ a high enough inlier ratio which means previous measurements support the
+ current measurement as a part of the track, the track is classified as
+ a good track.
+ Otherwise, it is classified as a bad track in a list that won't be displayed
+ in the tracking result.
+\end_layout
+
+\begin_layout Standard
+However, one thing that can be tried to make the R-RANSAC tracking more
+ robust is to add a feature based tracker because R-RANSAC currently only
+ cares about trajectories of the objects.
+ In this paper, a tracking using mean shift algorithm on color histogram
+ is examined as one possible option to enhance the robustness of R-RANSAC
+ tracking.
+ 
+\end_layout
+
+\begin_layout Standard
+As the name of the algorithm implies, mean shift is an algorithm that shifts
+ a window (for example, a circle) so that the window includes the most possible
+ points of interest.
+ As the window continues to shift to include more points, eventually it
+ is expected to arrive to a point that includes the maximum number of points.
+ Because of this behavior, it is a hill climbing algorithm.
+ Figure 1 below describes this process.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename meanshift.png
+	lyxscale 50
+	scale 25
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Mean shift Algorithm
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-1"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Procedure
+\end_layout
+
+\begin_layout Standard
+Mean shift is just a fundamental algorithm that can be applied to solve
+ any other problems, not just tracking problem.
+ Itself doesn’t imply any tracking capability.
+ Thus, it seems appropriate to explain what other things need to happen
+ before actually using the mean shift.
+ The basic idea of mean shift tracking is to find a window that has the
+ most similar color histogram in the current image to the color histogram
+ of the object to be tracked as shown in Figure 2.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename histogram.png
+	lyxscale 80
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The color histogram of the object to be tracked is searched for in input
+ image.
+ The metric to measure the similarity of two histograms is Bhattachayya
+ Coefficient.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+However, it is computationally rather inefficient if the histogram is calculated
+ for all possible windows in every frame of a video stream.
+ For this reason, it is common to use histogram backprojection to reduce
+ the computation
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-2"
+
+\end_inset
+
+.
+ When an image is backprojected with a model histogram, the resulting image
+ will show the probability distribution of how similar to a model histogram.
+ Then, mean shift is applied on the backprojected image to find where the
+ track is likely to be.
+ Figure 3 summarizes the process of mean shift tracking.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename backprojection.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Mean shift tracking using backprojection method
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Implementation
+\end_layout
+
+\begin_layout Standard
+This version of mean shift tracking implementation takes advantage of Open
+ Source Computer Vision library(OpenCV) since OpenCV provided with several
+ proper functions for the implementation such as calcHist(), normalize(),
+ calcBackproject(), and meanshift() as well as user interaction.
+ 
+\end_layout
+
+\begin_layout Standard
+The implementation of mean shift tracking can be summarized as the following:
+\end_layout
+
+\begin_layout Enumerate
+Pick a point on the object of interest that describes the color information
+ of the track.
+\end_layout
+
+\begin_layout Enumerate
+Use connected component algorithm to find more part of the track.
+ Then, create a mask that only contains the part of the track.
+ The connected component looks for every connected pixels within certain
+ color similaries to a point picked in step 1.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Using the mask created in step 2, calculate and store the color histogram
+ of the track.
+ Create the initial search window of the track.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Backproject the incoming image with the histogram stored in step 3.
+\end_layout
+
+\begin_layout Enumerate
+Apply mean shift starting at the position of the search window in the previous
+ frame.
+\end_layout
+
+\begin_layout Standard
+The Figure 4 - 8 show an example of each step.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_original.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Step 1: Track selection
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align right
+\begin_inset Graphics
+	filename messi_mask.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align right
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Step 2: Create a mask
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_window.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Step 3: Calculate the histogram and create the initial search window
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "45col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_backproj.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Step 4: Backproject the incoming image with the histogram in step 3
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "45col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_meanshift.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Step 5: Apply mean shift
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Experimental work
+\end_layout
+
+\begin_layout Standard
+The mean shift tracking was experimented on three different video stream:
+ messi.mp4, byu.mp4 and seoul.mp4.
+ Messi data illustrates an ideal setting that mean shift tracking might
+ work quite robustly because camera doesn't move abrubtly and the size of
+ the track doesn't change dramatically throughout the video.
+ Also, the color of the track and background are noticably different.
+ BYU data has a similar setting to Messi data in a way that camera is almost
+ static, but it is also different in a way that some objects can have similar
+ color to the background color.
+ Seoul data was filmed in the most complex and crowded environment and the
+ result of the mean shift tracking shows that it is not robust in dealing
+ with occlusions and in crowded setting.
+ 
+\end_layout
+
+\begin_layout Subsection
+Result on Messi data
+\end_layout
+
+\begin_layout Standard
+The performance on Messi data yielded the most satisfactory result of the
+ mean shift tracking.
+ Once the track is selected, it is being tracked to the end most of times.
+ Figure 9-11 shows a successful scenario of the tracking.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_begin.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The track is selected at frame 2
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_middle.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The track is being tracked at frame 338
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_end.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Tracking was successful up to the end of the video
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+However, when two players in the same team intersect, sometimes the track
+ switches to the other player.
+ Figure 12-13 shows this scenario.This shows that mean shift tracking can
+ be enhanced when motion based tracker or other feature such as SIFT is
+ used together
+\begin_inset CommandInset citation
+LatexCommand cite
+key "key-3"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "45col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_switch1.png
+	lyxscale 50
+	scale 20
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The track switched to another player
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "45col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename messi_switch2.png
+	lyxscale 50
+	scale 20
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The track switched because another player had higher probability of matching
+ to the histogram of the original track
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Result on BYU data
+\end_layout
+
+\begin_layout Standard
+The result on the BYU video sequence showed clearly the upside and downside
+ of mean shift tracking.
+ Figure 14-16 shows when the mean shift tracking can work well.
+ Since an object with distinct color was selcted, there is only one distinct
+ white clutter in the backprojection image which the tracker doesn't have
+ any problem following the track.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename byu_red_initial.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+A person with red shirts selected to be tracked
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename byu_red_backproj.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+A unique color makes it easy to track this person
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename byu_red_end.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Tracking was successful up to this person going out of the camera view
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+However, if an object with similar color to the background is to be tracked,
+ the mean shift tracker is not robust and reliable because the backprojection
+ would have multiple regions with high probability of matching to the histogram
+ of the actual track.
+ Subsequently, mean shift is confused in which direction the real track
+ is moving.
+ Figure 17-19 illustrates this scenario.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename byu_gray_initial.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+A person with gray shirts selected to be tracked
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename byu_gray_backproj.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+The track is not distinct in the backprojection
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename byu_gray_end.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Tracker loses the track soon
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Result on Seoul data
+\end_layout
+
+\begin_layout Standard
+Mean shift tracker can not be considered as a robust tracker on an environment
+ like in Seoul data.
+ Many things can go wrong in many ways.
+ However, this data is used to illustrate what happens on the track when
+ being occluded by other objets.
+ Figure 20-22 shows this situation.
+ When the track(an orange color taxi) is occluded by the utility pole in
+ the middle of the image, the mean shift tracker gets stuck at the right
+ side of the pole even if the track is moving to the left side of the pole.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename seoul_initial.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Initial object is selected
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename seoul_occluded1.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Right before occlusion
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset space \hfill{}
+\end_inset
+
+
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "30col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename seoul_occluded2.png
+	lyxscale 50
+	scale 15
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Right after occlusion
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Conclusion
+\end_layout
+
+\begin_layout Standard
+Mean shift with the backprojection method can be used to track an object
+ in a video stream.
+ The ideal settings for mean shift tracking include the static or slowly
+ moving camera and a distinct color of the object to be tracked.
+ Other than in the ideal settings, mean shift tracking cannot be a robust
+ tracking method.
+ There are more ways that can go wrong than right in unidealized environment
+ such as camera that moves too quick, objects intersecting across each other,
+ selected track changing its size in video sequence, and the occlusion of
+ the track.
+ However, mean shift can be robust if used with other tracking schemes.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "key-1"
+
+\end_inset
+
+D.
+ Dementhon.
+ Spatio-Temporal Segmentation of Video by Hierarchical Mean Shift Analysis,
+ 2002.
+ Center for Automat.
+ Res., U of Md, College Park.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "key-2"
+
+\end_inset
+
+D.
+ Comaniciu and P.
+ Meer.
+ Real-Time Tracking of Non-Rigid Objects using Mean Shift, 2000.
+ IEEE CVPR.
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+key "key-3"
+
+\end_inset
+
+H.
+ Zhou, Y.
+ Yuan, and C.
+ Shi.
+ Object tracking using SIFT features and mean shift, 2009.
+ Computer vision and image understanding 113 (2009) 345-352
+\end_layout
+
+\end_body
+\end_document

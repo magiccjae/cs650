@@ -6,6 +6,7 @@
 #include "opencv2/nonfree/features2d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/video/video.hpp"
+#include <string>
 
 using namespace cv;
 using namespace std;
@@ -41,7 +42,7 @@ int up = 50;
 
 int main(int argc, char** argv)
 {
-    VideoCapture cap("messi.mp4");
+    VideoCapture cap("seoul.mp4");
 
     if( !cap.isOpened() )
     {
@@ -51,9 +52,16 @@ int main(int argc, char** argv)
     
     namedWindow(src_window,CV_WINDOW_AUTOSIZE);
     setMouseCallback(src_window,mouseHandler,0);
-    
+    int frame_number = 0;
+    cout << "total frame number: " << cap.get(CV_CAP_PROP_FRAME_COUNT) << endl;
     for(;;){
         cap >> frame;
+        frame_number = (int)cap.get(CV_CAP_PROP_POS_FRAMES);
+        Point position = Point(10, 25);
+//        cout << std::to_string(frame_number) << endl;
+        string display = "Frame #: " + to_string(frame_number);
+//        cout << display << endl;
+       putText(frame, display, position, FONT_HERSHEY_PLAIN, 2, Scalar(0,255,255,255),2);
         cvtColor(frame, hsv, CV_BGR2HSV);
 
         if(setup){
@@ -81,8 +89,8 @@ int main(int argc, char** argv)
 
 void getHistogram(){
     int ch[] = {0, 0};
-    int h_bins = 100;    // initial 30
-    int s_bins = 100;    // initial 32
+    int h_bins = 30;    // initial 30
+    int s_bins = 32;    // initial 32
     int histSize[] = {h_bins,s_bins};
     
     calcHist(&hsv, 1, channels, mask, hist, 2, histSize, ranges, true, false);
